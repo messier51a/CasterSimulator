@@ -8,9 +8,9 @@ namespace SteelCastingSimulation
         static void Main()
         {
             Console.WriteLine("Starting Steel Casting Simulation...");
-
-            double castWidth = 1.5; // meters
-            double castThickness = 0.2; // meters
+            
+            double castWidth = 1.56; // meters
+            double castThickness = 0.103; // meters
 
             var ladles = new LadleSimulator[]
             {
@@ -28,7 +28,6 @@ namespace SteelCastingSimulation
 
             while (coordinator.IsRunning)
             {
-                Console.WriteLine("\n[SIMULATION TICK]");
                 Console.WriteLine("Advancing simulation by 1 second...");
 
                 Console.WriteLine($"Ladle: {coordinator.GetActiveLadle().HeatId}, " +
@@ -39,8 +38,10 @@ namespace SteelCastingSimulation
                                   $"Strand Length: {coordinator.Strand.StrandLength:F2} m");
 
                 var status = coordinator.Tick(1.0);
+                
+                VerifyCalculations(coordinator, 1.0); // Verify calculations for this tick
 
-                if (status == CoordinatorStatus.NeedsRotation)
+                if (status == CoordinatorStatus.RotateTurret)
                 {
                     Console.WriteLine("Active ladle is empty. Preparing to rotate turret...");
                     int rotateTime = RandomRotationTime();
@@ -87,5 +88,20 @@ namespace SteelCastingSimulation
             }
             Console.WriteLine("\nRotation complete.");
         }
+        
+        private static void VerifyCalculations(CastingCoordinator coordinator, double deltaTimeSeconds)
+        {
+            var ladle = coordinator.GetActiveLadle();
+            double expectedLadleWeight = ladle.InitialWeight - coordinator.GetTundishWeight();
+            double calculatedCastLength = coordinator.GetCastLength();
+            double calculatedDrainRate = coordinator.CastSpeed * coordinator.CastWidth * coordinator.CastThickness * 7850; // Density of steel
+
+            Console.WriteLine("\n[VERIFICATION]");
+            Console.WriteLine($"Expected Ladle Weight: {expectedLadleWeight:F2} lbs, Actual: {ladle.RemainingSteelWeight:F2} lbs");
+            Console.WriteLine($"Expected Tundish Weight: {ladle.LastPoured - calculatedDrainRate * deltaTimeSeconds:F2} lbs, Actual: {coordinator.GetTundishWeight():F2} lbs");
+            Console.WriteLine($"Expected Cast Speed: {coordinator.CastSpeed * 60:F2} m/min");
+            Console.WriteLine($"Expected Cast Length Increase: {(coordinator.CastSpeed * deltaTimeSeconds):F2} m, Actual Cast Length: {calculatedCastLength:F2} m");
+        }
+
     }
 }

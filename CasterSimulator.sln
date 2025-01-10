@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.App", "CasterSimulator.App\CasterSimulator.App.csproj", "{C93C21A8-7080-44CF-8C0F-58A7A6C0123B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterCoordinator", "CasterCoordinator\CasterCoordinator.csproj", "{C93C21A8-7080-44CF-8C0F-58A7A6C0123B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LadleSimulator", "LadleSimulator\LadleSimulator.csproj", "{B06646BF-A374-44B3-8D5A-60063CEB33AE}"
 EndProject

@@ -1,9 +1,12 @@
 using System;
-
+using log4net;
+using log4net.Config;
 namespace SteelCastingSimulation
 {
     public class CastingCoordinator
     {
+        private static readonly ILog logger = LogManager.GetLogger(typeof(Program));
+        
         private TundishSimulator tundish;
         private TurretSimulator turret;
         private StrandSimulator strand;
@@ -77,7 +80,7 @@ namespace SteelCastingSimulation
                 if (currentLadleIndex < ladles.Length - 1)
                 {
                     currentLadleIndex++;
-                    return CoordinatorStatus.NeedsRotation;
+                    return CoordinatorStatus.RotateTurret;
                 }
                 else
                 {
@@ -98,6 +101,7 @@ namespace SteelCastingSimulation
             turret.ActiveLadle.OpenLadle();
         }
 
+        public double GetCastLength() => strand.CastLength;
         public LadleSimulator GetActiveLadle() => turret.ActiveLadle;
 
         public double GetTundishWeight() => tundish.CurrentSteelWeight;
