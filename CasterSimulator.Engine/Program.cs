@@ -49,9 +49,9 @@ namespace CasterSimulator
                     {
                         Console.WriteLine("\n[Process State]");
                         Console.WriteLine($"Current Ladle: {simulationEngine.CurrentLadle.HeatId}");
-                        Console.WriteLine($"Current Ladle Weight: {simulationEngine.CurrentLadle.RemainingSteelWeight:F2} lbs");
-                        Console.WriteLine($"Ladle Flow Rate: {simulationEngine.CurrentLadle.PouringRate:F2} lbs/s"); // Approx flow rate
-                        Console.WriteLine($"Tundish Weight: {simulationEngine.TundishWeight:F2} lbs");
+                        Console.WriteLine($"Current Ladle Weight: {simulationEngine.CurrentLadle.RemainingSteelWeight:F2} kg");
+                        Console.WriteLine($"Ladle Flow Rate: {simulationEngine.CurrentLadle.PouringRate:F2} kg/s"); // Approx flow rate
+                        Console.WriteLine($"Tundish Weight: {simulationEngine.TundishWeight:F2} kg");
                         Console.WriteLine($"Cast Speed: {simulationEngine.CastSpeed:F2} m/min");
                         Console.WriteLine($"Cast Length: {simulationEngine.CastLength:F2} m");
                         Console.WriteLine($"Strand Length: {simulationEngine.StrandLength:F2} m");

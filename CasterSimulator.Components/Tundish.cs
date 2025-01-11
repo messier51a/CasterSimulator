@@ -14,7 +14,7 @@ namespace CasterSimulator.Components
 
         public double CurrentSteelWeight => currentSteelWeight;
 
-        public Tundish(string id, double threshold = 12000.0, double maxWeight = 27000.0)
+        public Tundish(string id, double threshold = 6000.0, double maxWeight = 27000.0)
         {
             tundishId = id ?? throw new ArgumentNullException(nameof(id));
             thresholdWeight = threshold;

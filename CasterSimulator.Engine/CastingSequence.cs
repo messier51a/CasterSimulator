@@ -54,7 +54,7 @@ namespace CasterSimulator.Engine
             _status = CastingStatus.ReadyToCast;
 
             // Start the initial rapid fill
-            _ladles[_currentLadleIndex].OpenLadle(300.0); // High initial flow rate
+            _ladles[_currentLadleIndex].OpenLadle(136.0); // High initial flow rate in kg/s
             _status = CastingStatus.Pouring;
             
             // Example products
@@ -69,17 +69,17 @@ namespace CasterSimulator.Engine
             while (_isRunning)
             {
                 // Monitor and dynamically adjust flow rate
-                if (_tundish.CurrentSteelWeight > 27 * 2204.62) // Prevent overflow
+                if (_tundish.CurrentSteelWeight > 27000.0) // Prevent overflow (27 tons in kg)
                 {
-                    _ladles[_currentLadleIndex].AdjustPouringRate(150.0); // Lower flow rate
+                    _ladles[_currentLadleIndex].AdjustPouringRate(68.0); // Lower flow rate (kg/s)
                 }
-                else if (_tundish.CurrentSteelWeight > 20 * 2204.62 && _strand.CastLength < 7.0)
+                else if (_tundish.CurrentSteelWeight > 20000.0 && _strand.CastLength < 7.0) // During ramp-up
                 {
-                    _ladles[_currentLadleIndex].AdjustPouringRate(200.0); // Adjust during ramp-up
+                    _ladles[_currentLadleIndex].AdjustPouringRate(90.0); // Adjust during ramp-up (kg/s)
                 }
                 else
                 {
-                    _ladles[_currentLadleIndex].AdjustPouringRate(185.38); // Steady-state rate
+                    _ladles[_currentLadleIndex].AdjustPouringRate(84.0); // Steady-state rate (kg/s)
                 }
             }
 
@@ -103,7 +103,7 @@ namespace CasterSimulator.Engine
         {
             _tundish.CastingThresholdReached += (s, e) =>
             {
-                _strand.StartCasting(0, 4.0 / 60.0, 90.0); // Ramp speed from 0 to 4 m/min over 30 seconds
+                _strand.StartCasting(0.1, 4.0 / 60.0, 90.0); // Ramp speed from 0 to 4 m/min over 30 seconds
                 _status = CastingStatus.Casting;
             };
             _tundish.TundishEmpty += (s, e) =>
@@ -124,7 +124,7 @@ namespace CasterSimulator.Engine
                 // Calculate mass flow based on strand's length increment
                 double crossSectionalArea = _mold.GetCrossSectionalArea(); // m²
                 double steelDensity = 7850; // kg/m³
-                double massFlow = crossSectionalArea * _strand.LastIncrement * steelDensity * 2.20462; // lbs
+                double massFlow = crossSectionalArea * _strand.LastIncrement * steelDensity; // kg
 
                 // Remove steel from the tundish
                 _tundish.RemoveSteel(massFlow);
