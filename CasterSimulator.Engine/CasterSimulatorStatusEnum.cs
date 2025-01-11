@@ -1,6 +1,6 @@
-namespace SteelCastingSimulation
+namespace CasterSimulator.Engine
 {
-    public enum CoordinatorStatus
+    public enum CasterSimulatorStatus
     {
         Normal,        // Normal operation, casting is ongoing
         RotateTurret, // Ladle is empty, needs turret rotation
