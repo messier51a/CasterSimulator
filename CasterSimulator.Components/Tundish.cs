@@ -4,69 +4,39 @@ namespace CasterSimulator.Components
 {
     public class Tundish
     {
-        private readonly string tundishId; // Unique identifier for the tundish
-        private readonly double thresholdWeight = 12000.0; // Threshold weight to trigger CastingStart (lbs)
-        private readonly double minimumWeight = 2000.0; // Minimum weight to trigger CastingEnd (lbs)
-        private double currentSteelWeight; // Current weight of steel in the tundish (lbs)
-        private bool castingStarted; // Flag indicating if casting has started
-        private bool castingEnded; // Flag indicating if casting has ended
+        private readonly string tundishId;
+        private readonly double thresholdWeight;
+        private double currentSteelWeight;
 
-        public string TundishId => tundishId; // Expose tundish ID
-        public double CurrentSteelWeight => currentSteelWeight; // Expose current weight
+        public event EventHandler CastingThresholdReached;
+        public event EventHandler TundishEmpty;
 
-        // Events for casting milestones
-        public event EventHandler CastingStart;
-        public event EventHandler CastingEnd;
+        public double CurrentSteelWeight => currentSteelWeight;
 
-        public Tundish(string id)
+        public Tundish(string id, double threshold = 12000.0)
         {
-            if (string.IsNullOrWhiteSpace(id))
-                throw new ArgumentException("Tundish ID must be a valid string.", nameof(id));
-
-            tundishId = id;
-            currentSteelWeight = 0.0;
-            castingStarted = false;
-            castingEnded = false;
+            tundishId = id ?? throw new ArgumentNullException(nameof(id));
+            thresholdWeight = threshold;
         }
 
-        // Adds steel to the tundish
-        public void AddSteel(double amount)
+        public void AddSteel(double weight)
         {
-            if (amount <= 0)
-                return;
-
-            currentSteelWeight += amount;
-
-            // Trigger CastingStart if the weight exceeds the threshold
-            if (!castingStarted && currentSteelWeight >= thresholdWeight)
+            currentSteelWeight += weight;
+            if (currentSteelWeight >= thresholdWeight)
             {
-                castingStarted = true;
-                CastingStart?.Invoke(this, EventArgs.Empty);
-                Console.WriteLine($"Tundish {tundishId}: Casting started. Current weight: {currentSteelWeight:F2} lbs");
+                CastingThresholdReached?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        // Drains steel from the tundish
-        public void Drain(double deltaTimeSeconds, double drainRate)
+        public void RemoveSteel(double weight)
         {
-            if (deltaTimeSeconds <= 0 || drainRate <= 0)
-                return;
-
-            double drainedAmount = drainRate * deltaTimeSeconds;
-
-            // Ensure we don't drain more than the current weight
-            if (drainedAmount > currentSteelWeight)
-                drainedAmount = currentSteelWeight;
-
-            currentSteelWeight -= drainedAmount;
-
-            // Trigger CastingEnd if the weight falls below the minimum
-            if (!castingEnded && currentSteelWeight <= minimumWeight)
+            if (currentSteelWeight <= 0)
             {
-                castingEnded = true;
-                CastingEnd?.Invoke(this, EventArgs.Empty);
-                Console.WriteLine($"Tundish {tundishId}: Casting ended. Current weight: {currentSteelWeight:F2} lbs");
+                TundishEmpty?.Invoke(this, EventArgs.Empty);
+                return;
             }
+
+            currentSteelWeight = Math.Max(0, currentSteelWeight - weight);
         }
     }
 }
