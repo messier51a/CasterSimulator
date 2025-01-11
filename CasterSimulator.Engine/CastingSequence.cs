@@ -16,14 +16,18 @@ namespace CasterSimulator.Engine
         private int _currentLadleIndex;
         private bool _isRunning;
         private CastingStatus _status;
-        
+
+        private readonly List<HeatSegment> _heatSegments = new List<HeatSegment>();
+        private HeatSegment _currentHeatSegment;
+
+        public IReadOnlyList<HeatSegment> HeatSegments => _heatSegments; // Expose heat segments
         public double CastSpeed => _strand.CastSpeed;
         public double CastLength => _strand.CastLength; // Expose cast length
         public double StrandLength => _strand.StrandLength; // Expose strand length
         public bool IsRunning => _isRunning; // Expose whether the sequence is running
         public Product NextProduct => _torch.NextProduct; // Expose next product to cut
         public Ladle CurrentLadle => _ladles[_currentLadleIndex];
-         public double TundishWeight => _tundish.CurrentSteelWeight; // Expose current tundish weight
+        public double TundishWeight => _tundish.CurrentSteelWeight; // Expose current tundish weight
         public double LastStrandIncrement => _strand.LastIncrement; // Expose last strand increment
         public bool IsTorchMonitoring => _torch.NextProduct != null; // Expose torch monitoring status
         public CastingStatus Status => _status; // Expose casting status
@@ -54,9 +58,9 @@ namespace CasterSimulator.Engine
             _status = CastingStatus.ReadyToCast;
 
             // Start the initial rapid fill
-            _ladles[_currentLadleIndex].OpenLadle(136.0); // High initial flow rate in kg/s
+            _ladles[_currentLadleIndex].OpenLadle(300.0); // High initial flow rate
             _status = CastingStatus.Pouring;
-            
+
             // Example products
             _productQueue.Enqueue(new Product("Prod1", 10.0));
             _productQueue.Enqueue(new Product("Prod2", 12.0));
@@ -88,24 +92,29 @@ namespace CasterSimulator.Engine
 
         private void RegisterLadleEvents(Ladle ladle)
         {
-            ladle.SteelPoured += (s, pouredSteel) =>
-            {
-                _tundish.AddSteel(pouredSteel);
-            };
+            ladle.SteelPoured += (s, pouredSteel) => { _tundish.AddSteel(pouredSteel); };
 
-            ladle.LadleEmpty += (s, e) =>
-            {
-                SwitchLadle();
-            };
+            ladle.LadleEmpty += (s, e) => { SwitchLadle(); };
         }
 
         private void RegisterTundishEvents()
         {
             _tundish.CastingThresholdReached += (s, e) =>
             {
-                _strand.StartCasting(0.1, 4.0 / 60.0, 90.0); // Ramp speed from 0 to 4 m/min over 30 seconds
+                _strand.StartCasting(0, 4.0 / 60.0, 90.0); // Ramp speed from 0 to 4 m/min over 30 seconds
                 _status = CastingStatus.Casting;
             };
+
+            _tundish.MixZoneEnded += (s, e) =>
+            {
+                if (_currentHeatSegment != null)
+                {
+                    _currentHeatSegment.MixZoneEnd = _strand.CastLength;
+                    Console.WriteLine(
+                        $"Mix Zone Ended for Heat {_currentHeatSegment.HeatId}. Start: {_currentHeatSegment.MixZoneStart:F2} m, End: {_currentHeatSegment.MixZoneEnd:F2} m.");
+                }
+            };
+
             _tundish.TundishEmpty += (s, e) =>
             {
                 _strand.TailOut();
@@ -128,15 +137,18 @@ namespace CasterSimulator.Engine
 
                 // Remove steel from the tundish
                 _tundish.RemoveSteel(massFlow);
+
+                // Advance heat boundaries for all heats
+                foreach (var segment in _heatSegments)
+                {
+                    segment.HeatBoundary += _strand.LastIncrement;
+                }
             };
         }
 
         private void RegisterTorchEvents()
         {
-            _torch.CutDone += (s, product) =>
-            {
-                SetNextProduct();
-            };
+            _torch.CutDone += (s, product) => { SetNextProduct(); };
         }
 
         private void SetNextProduct()
@@ -146,7 +158,6 @@ namespace CasterSimulator.Engine
                 var nextProduct = _productQueue.Dequeue();
                 _torch.SetNextProduct(nextProduct);
             }
-           
         }
 
         private void SwitchLadle()
@@ -160,8 +171,25 @@ namespace CasterSimulator.Engine
 
             var nextLadle = _ladles[_currentLadleIndex];
             RegisterLadleEvents(nextLadle);
+
             nextLadle.OpenLadle(300.0); // Start the next ladle with a high flow rate
             _status = CastingStatus.Pouring;
+
+            if (_currentLadleIndex > 0) // Not the first heat
+            {
+                var heatSegment = new HeatSegment
+                {
+                    HeatId = nextLadle.HeatId,
+                    MixZoneStart = _strand.CastLength,
+                    HeatBoundary = _strand.CastLength // Initialize boundary at current length
+                };
+
+                _heatSegments.Add(heatSegment);
+
+                _currentHeatSegment = heatSegment;
+
+                _tundish.StartMixZone();
+            }
         }
     }
 }

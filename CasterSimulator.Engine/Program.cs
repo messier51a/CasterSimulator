@@ -30,13 +30,13 @@ namespace CasterSimulator
                 Console.WriteLine("\n[Initialization] Setting up ladles...");
                 var ladles = new Ladle[]
                 {
-                    new Ladle(260000, "Heat1"),
-                    new Ladle(280000, "Heat2"),
-                    new Ladle(245000, "Heat3")
+                    new Ladle(16000, "Heat1"),
+                    new Ladle(18000, "Heat2"),
+                    new Ladle(14500, "Heat3")
                 };
                 foreach (var ladle in ladles)
                 {
-                    Console.WriteLine($"Ladle initialized: {ladle.HeatId}, Initial Weight: {ladle.RemainingSteelWeight} lbs");
+                    Console.WriteLine($"Ladle initialized: {ladle.HeatId}, Initial Weight: {ladle.RemainingSteelWeight} kg");
                 }
 
                 // Initialize simulation engine
@@ -57,6 +57,11 @@ namespace CasterSimulator
                         Console.WriteLine($"Strand Length: {simulationEngine.StrandLength:F2} m");
                         Console.WriteLine($"Next Product: {(simulationEngine.NextProduct != null ? simulationEngine.NextProduct.ProductId : "None")}");
                         Console.WriteLine($"Casting Status: {simulationEngine.Status}");
+
+                        foreach (var segment in simulationEngine.HeatSegments)
+                        {
+                            Console.WriteLine($"Heat {segment.HeatId}: Boundary: {segment.HeatBoundary:F2} m, Mix Zone: Start: {segment.MixZoneStart:F2} m to End: {segment.MixZoneEnd:F2} m");
+                        }
                     });
 
                 // Run simulation

@@ -8,9 +8,13 @@ namespace CasterSimulator.Components
         private readonly double thresholdWeight;
         private readonly double maxWeight;
         private double currentSteelWeight;
+        private double _tundishMixSteelWeight = 0.0; // Remaining mix steel weight (kg)
+        private bool _isMixZoneActive = false; // Tracks if mix zone is active
+        private bool _thresholdReached;
 
         public event EventHandler CastingThresholdReached;
         public event EventHandler TundishEmpty;
+        public event EventHandler MixZoneEnded;
 
         public double CurrentSteelWeight => currentSteelWeight;
 
@@ -31,9 +35,10 @@ namespace CasterSimulator.Components
                 currentSteelWeight = maxWeight;
             }
 
-            // Trigger casting threshold if reached
-            if (currentSteelWeight >= thresholdWeight)
+            // Trigger casting threshold if reached and not already triggered
+            if (!_thresholdReached && currentSteelWeight >= thresholdWeight)
             {
+                _thresholdReached = true; // Mark as triggered
                 CastingThresholdReached?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -47,6 +52,24 @@ namespace CasterSimulator.Components
             }
 
             currentSteelWeight = Math.Max(0, currentSteelWeight - weight);
+
+            // Decrement mix zone steel weight if active
+            if (_isMixZoneActive)
+            {
+                _tundishMixSteelWeight -= weight;
+
+                if (_tundishMixSteelWeight <= 0)
+                {
+                    _isMixZoneActive = false;
+                    MixZoneEnded?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public void StartMixZone()
+        {
+            _tundishMixSteelWeight = currentSteelWeight * 0.5;
+            _isMixZoneActive = true;
         }
     }
 }
