@@ -15,6 +15,7 @@ namespace CasterSimulator.Engine
         private readonly Queue<Product> _productQueue; // Queue of products to cut
         private int _currentLadleIndex;
         private bool _isRunning;
+        private CastingStatus _status;
 
         public int CurrentLadleIndex => _currentLadleIndex; // Expose current ladle index
         public double StrandLength => _strand.StrandLength; // Expose strand length
@@ -24,6 +25,7 @@ namespace CasterSimulator.Engine
         public double TundishWeight => _tundish.CurrentSteelWeight; // Expose current tundish weight
         public double LastStrandIncrement => _strand.LastIncrement; // Expose last strand increment
         public bool IsTorchMonitoring => _torch.NextProduct != null; // Expose torch monitoring status
+        public CastingStatus Status => _status; // Expose casting status
 
         public CastingSequence(Ladle[] ladlesArray, Mold mold, Tundish tundish)
         {
@@ -38,6 +40,7 @@ namespace CasterSimulator.Engine
             _productQueue = new Queue<Product>();
 
             _currentLadleIndex = 0;
+            _status = CastingStatus.Idle;
 
             RegisterLadleEvents(_ladles[0]);
             RegisterTundishEvents();
@@ -47,7 +50,10 @@ namespace CasterSimulator.Engine
 
         public void Run()
         {
+            _status = CastingStatus.ReadyToCast;
+
             _ladles[_currentLadleIndex].OpenLadle();
+            _status = CastingStatus.LadleOpen;
 
             // Example products
             _productQueue.Enqueue(new Product("Prod1", 10.0));
@@ -62,6 +68,8 @@ namespace CasterSimulator.Engine
             {
                 // Simulation logic
             }
+
+            _status = CastingStatus.Cast;
         }
 
         private void RegisterLadleEvents(Ladle ladle)
@@ -82,10 +90,12 @@ namespace CasterSimulator.Engine
             _tundish.CastingThresholdReached += (s, e) =>
             {
                 _strand.StartCasting(3.0 / 60.0); // Start with an initial speed of 3 m/min
+                _status = CastingStatus.Casting;
             };
             _tundish.TundishEmpty += (s, e) =>
             {
                 _strand.TailOut();
+                _status = CastingStatus.Tailout;
                 _isRunning = false;
             };
         }
@@ -122,12 +132,14 @@ namespace CasterSimulator.Engine
                 var nextProduct = _productQueue.Dequeue();
                 _torch.SetNextProduct(nextProduct);
             }
+            
         }
 
         private void SwitchLadle()
         {
             if (++_currentLadleIndex >= _ladles.Length)
             {
+                _status = CastingStatus.Cast;
                 _isRunning = false;
                 return;
             }
@@ -135,6 +147,7 @@ namespace CasterSimulator.Engine
             var nextLadle = _ladles[_currentLadleIndex];
             RegisterLadleEvents(nextLadle);
             nextLadle.OpenLadle();
+            _status = CastingStatus.LadleOpen;
         }
     }
 }

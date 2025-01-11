@@ -53,6 +53,7 @@ namespace CasterSimulator
                         Console.WriteLine($"Tundish Weight: {simulationEngine.TundishWeight:F2} lbs");
                         Console.WriteLine($"Strand Length: {simulationEngine.StrandLength:F2} m");
                         Console.WriteLine($"Next Product: {(simulationEngine.NextProduct != null ? simulationEngine.NextProduct.ProductId : "None")}");
+                        Console.WriteLine($"Casting Status: {simulationEngine.Status}");
                     });
 
                 // Run simulation
