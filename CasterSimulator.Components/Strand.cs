@@ -5,20 +5,19 @@ namespace CasterSimulator.Components
 {
     public class Strand
     {
-        private readonly Mold mold; // Reference to the mold for dimensions
-        private double castLength; // Total length of steel cast (in meters)
-        private double strandLength; // Length of steel remaining on the machine (in meters)
-        private double tailOffset; // Distance from the mold to the tail of the steel being cast
-        private readonly double torchPosition = 20.0; // Fixed position of the torch (in meters)
-        private readonly double slabLength = 10.0; // Length of each slab after cutting (in meters)
-        private IDisposable strandAdvanceSubscription; // Reactive subscription for strand advancement
-        private bool isCasting; // Indicates whether casting is ongoing
+        private double _castLength; // Total length of steel cast (in meters)
+        private double _strandLength; // Length of steel remaining on the machine (in meters)
+        private double _tailOffset; // Distance from the mold to the tail of the steel being cast
+        private const double TorchPosition = 20.0; // Fixed position of the torch (in meters)
+        private const double SlabLength = 10.0; // Length of each slab after cutting (in meters)
+        private IDisposable _strandAdvanceSubscription; // Reactive subscription for strand advancement
+        private bool _isCasting; // Indicates whether casting is ongoing
         private bool _isTailOut; // Indicates whether the strand is in tail-out mode
         private double lastIncrement; // Last length increment advanced
 
-        public double CastLength => castLength; // Expose total cast length
-        public double StrandLength => strandLength; // Expose current strand length
-        public double TailOffset => tailOffset; // Expose current tail offset
+        public double CastLength => _castLength; // Expose total cast length
+        public double StrandLength => _strandLength; // Expose current strand length
+        public double TailOffset => _tailOffset; // Expose current tail offset
         public double LastIncrement => lastIncrement; // Expose the last length increment
 
         public event EventHandler StrandUpdated; // Event triggered on strand update
@@ -26,27 +25,26 @@ namespace CasterSimulator.Components
 
         public Strand(Mold mold)
         {
-            this.mold = mold ?? throw new ArgumentNullException(nameof(mold));
-            castLength = 0.0;
-            strandLength = 0.0;
-            tailOffset = 0.0;
+            _castLength = 0.0;
+            _strandLength = 0.0;
+            _tailOffset = 0.0;
             lastIncrement = 0.0;
-            isCasting = false;
+            _isCasting = false;
             _isTailOut = false;
         }
 
         // Start the casting process
         public void StartCasting(double castSpeed)
         {
-            if (isCasting) return;
+            if (_isCasting) return;
 
-            isCasting = true;
+            _isCasting = true;
             _isTailOut = false;
-            castLength = 0.0;
-            strandLength = 0.0;
-            tailOffset = 0.0;
+            _castLength = 0.0;
+            _strandLength = 0.0;
+            _tailOffset = 0.0;
 
-            strandAdvanceSubscription = Observable
+            _strandAdvanceSubscription = Observable
                 .Interval(TimeSpan.FromSeconds(1)) // Advance every second
                 .Subscribe(_ => AdvanceStrand(castSpeed));
         }
@@ -69,16 +67,16 @@ namespace CasterSimulator.Components
             if (_isTailOut)
             {
                 // Increment tail offset only in tail-out mode
-                tailOffset += lastIncrement;
+                _tailOffset += lastIncrement;
             }
-            else if (isCasting)
+            else if (_isCasting)
             {
                 // Increment cast length and strand length during casting
-                castLength += lastIncrement;
-                strandLength += lastIncrement;
+                _castLength += lastIncrement;
+                _strandLength += lastIncrement;
 
                 // Perform a cut if the strand length exceeds the torch position + slab length
-                if (strandLength >= torchPosition + slabLength)
+                if (_strandLength >= TorchPosition + SlabLength)
                 {
                     PerformSlabCut();
                 }
@@ -91,11 +89,11 @@ namespace CasterSimulator.Components
         private void PerformSlabCut()
         {
             // Reset the strand length to the torch position
-            strandLength = torchPosition;
+            _strandLength = TorchPosition;
 
             // Trigger the SlabCut event
             SlabCut?.Invoke(this, EventArgs.Empty);
-            Console.WriteLine($"Slab cut performed. Cast Length: {castLength:F2} meters, Strand Length reset to {strandLength:F2} meters.");
+            Console.WriteLine($"Slab cut performed. Cast Length: {_castLength:F2} meters, Strand Length reset to {_strandLength:F2} meters.");
         }
     }
 }

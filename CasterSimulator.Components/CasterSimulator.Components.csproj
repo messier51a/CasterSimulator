@@ -10,4 +10,8 @@
       <PackageReference Include="System.Reactive" Version="6.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\CasterSimulator.Models\CasterSimulator.Models.csproj" />
+    </ItemGroup>
+
 </Project>

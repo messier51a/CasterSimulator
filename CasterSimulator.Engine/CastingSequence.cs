@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using CasterSimulator.Components;
+using CasterSimulator.Models;
 
 namespace CasterSimulator.Engine
 {
@@ -9,8 +11,19 @@ namespace CasterSimulator.Engine
         private readonly Ladle[] _ladles;
         private readonly Mold _mold;
         private readonly Strand _strand;
+        private readonly Torch _torch;
+        private readonly Queue<Product> _productQueue; // Queue of products to cut
         private int _currentLadleIndex;
         private bool _isRunning;
+
+        public int CurrentLadleIndex => _currentLadleIndex; // Expose current ladle index
+        public double StrandLength => _strand.StrandLength; // Expose strand length
+        public bool IsRunning => _isRunning; // Expose whether the sequence is running
+        public Product NextProduct => _torch.NextProduct; // Expose next product to cut
+        public double CurrentLadleWeight => _ladles[_currentLadleIndex].RemainingSteelWeight; // Expose current ladle weight
+        public double TundishWeight => _tundish.CurrentSteelWeight; // Expose current tundish weight
+        public double LastStrandIncrement => _strand.LastIncrement; // Expose last strand increment
+        public bool IsTorchMonitoring => _torch.NextProduct != null; // Expose torch monitoring status
 
         public CastingSequence(Ladle[] ladlesArray, Mold mold, Tundish tundish)
         {
@@ -21,24 +34,33 @@ namespace CasterSimulator.Engine
             _tundish = tundish ?? throw new ArgumentNullException(nameof(tundish));
             _ladles = ladlesArray;
             _strand = new Strand(_mold);
+            _torch = new Torch(20.0); // Default torch position
+            _productQueue = new Queue<Product>();
 
             _currentLadleIndex = 0;
 
             RegisterLadleEvents(_ladles[0]);
             RegisterTundishEvents();
             RegisterStrandEvents();
+            RegisterTorchEvents();
         }
 
         public void Run()
         {
-            Console.WriteLine("Starting Steel Casting Simulation...");
             _ladles[_currentLadleIndex].OpenLadle();
-           
+
+            // Example products
+            _productQueue.Enqueue(new Product("Prod1", 10.0));
+            _productQueue.Enqueue(new Product("Prod2", 12.0));
+            _productQueue.Enqueue(new Product("Prod3", 8.0));
+
+            SetNextProduct();
+
             _isRunning = true;
 
             while (_isRunning)
             {
-                // Simulation logic can go here if needed
+                // Simulation logic
             }
         }
 
@@ -47,12 +69,10 @@ namespace CasterSimulator.Engine
             ladle.SteelPoured += (s, pouredSteel) =>
             {
                 _tundish.AddSteel(pouredSteel);
-                Console.WriteLine($"Ladle {ladle.HeatId} poured {pouredSteel:F2} lbs.");
             };
 
             ladle.LadleEmpty += (s, e) =>
             {
-                Console.WriteLine($"Ladle {ladle.HeatId} is empty.");
                 SwitchLadle();
             };
         }
@@ -62,11 +82,9 @@ namespace CasterSimulator.Engine
             _tundish.CastingThresholdReached += (s, e) =>
             {
                 _strand.StartCasting(3.0 / 60.0); // Start with an initial speed of 3 m/min
-                Console.WriteLine("Casting started.");
             };
             _tundish.TundishEmpty += (s, e) =>
             {
-                Console.WriteLine("Casting ended.");
                 _strand.TailOut();
                 _isRunning = false;
             };
@@ -76,6 +94,9 @@ namespace CasterSimulator.Engine
         {
             _strand.StrandUpdated += (s, e) =>
             {
+                // Update torch with the current strand length
+                _torch.SetStrandLength(_strand.StrandLength);
+
                 // Calculate mass flow based on strand's length increment
                 double crossSectionalArea = _mold.GetCrossSectionalArea(); // m²
                 double steelDensity = 7850; // kg/m³
@@ -83,21 +104,30 @@ namespace CasterSimulator.Engine
 
                 // Remove steel from the tundish
                 _tundish.RemoveSteel(massFlow);
-                Console.WriteLine($"Tundish updated: Removed {massFlow:F2} lbs. Remaining weight: {_tundish.CurrentSteelWeight:F2} lbs.");
-                Console.WriteLine($"Strand advanced by {_strand.LastIncrement:F2} m. Total strand length: {_strand.StrandLength:F2} m.");
             };
+        }
 
-            _strand.SlabCut += (s, e) =>
+        private void RegisterTorchEvents()
+        {
+            _torch.CutDone += (s, product) =>
             {
-                Console.WriteLine($"Slab cut. Current strand length: {_strand.StrandLength:F2} m, Total cast length: {_strand.CastLength:F2} m.");
+                SetNextProduct();
             };
+        }
+
+        private void SetNextProduct()
+        {
+            if (_productQueue.Count > 0)
+            {
+                var nextProduct = _productQueue.Dequeue();
+                _torch.SetNextProduct(nextProduct);
+            }
         }
 
         private void SwitchLadle()
         {
             if (++_currentLadleIndex >= _ladles.Length)
             {
-                Console.WriteLine("No more ladles available.");
                 _isRunning = false;
                 return;
             }
