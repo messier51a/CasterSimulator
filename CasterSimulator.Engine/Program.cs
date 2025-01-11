@@ -30,9 +30,9 @@ namespace CasterSimulator
                 Console.WriteLine("\n[Initialization] Setting up ladles...");
                 var ladles = new Ladle[]
                 {
-                    new Ladle(30000, "Heat1"),
-                    new Ladle(28000, "Heat2"),
-                    new Ladle(32000, "Heat3")
+                    new Ladle(260000, "Heat1"),
+                    new Ladle(280000, "Heat2"),
+                    new Ladle(245000, "Heat3")
                 };
                 foreach (var ladle in ladles)
                 {
@@ -48,9 +48,12 @@ namespace CasterSimulator
                     .Subscribe(_ =>
                     {
                         Console.WriteLine("\n[Process State]");
-                        Console.WriteLine($"Current Ladle: {ladles[simulationEngine.CurrentLadleIndex].HeatId}");
-                        Console.WriteLine($"Current Ladle Weight: {simulationEngine.CurrentLadleWeight:F2} lbs");
+                        Console.WriteLine($"Current Ladle: {simulationEngine.CurrentLadle.HeatId}");
+                        Console.WriteLine($"Current Ladle Weight: {simulationEngine.CurrentLadle.RemainingSteelWeight:F2} lbs");
+                        Console.WriteLine($"Ladle Flow Rate: {simulationEngine.CurrentLadle.PouringRate:F2} lbs/s"); // Approx flow rate
                         Console.WriteLine($"Tundish Weight: {simulationEngine.TundishWeight:F2} lbs");
+                        Console.WriteLine($"Cast Speed: {simulationEngine.CastSpeed:F2} m/min");
+                        Console.WriteLine($"Cast Length: {simulationEngine.CastLength:F2} m");
                         Console.WriteLine($"Strand Length: {simulationEngine.StrandLength:F2} m");
                         Console.WriteLine($"Next Product: {(simulationEngine.NextProduct != null ? simulationEngine.NextProduct.ProductId : "None")}");
                         Console.WriteLine($"Casting Status: {simulationEngine.Status}");

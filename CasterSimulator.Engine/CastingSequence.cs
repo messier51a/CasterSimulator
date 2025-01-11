@@ -16,13 +16,14 @@ namespace CasterSimulator.Engine
         private int _currentLadleIndex;
         private bool _isRunning;
         private CastingStatus _status;
-
-        public int CurrentLadleIndex => _currentLadleIndex; // Expose current ladle index
+        
+        public double CastSpeed => _strand.CastSpeed;
+        public double CastLength => _strand.CastLength; // Expose cast length
         public double StrandLength => _strand.StrandLength; // Expose strand length
         public bool IsRunning => _isRunning; // Expose whether the sequence is running
         public Product NextProduct => _torch.NextProduct; // Expose next product to cut
-        public double CurrentLadleWeight => _ladles[_currentLadleIndex].RemainingSteelWeight; // Expose current ladle weight
-        public double TundishWeight => _tundish.CurrentSteelWeight; // Expose current tundish weight
+        public Ladle CurrentLadle => _ladles[_currentLadleIndex];
+         public double TundishWeight => _tundish.CurrentSteelWeight; // Expose current tundish weight
         public double LastStrandIncrement => _strand.LastIncrement; // Expose last strand increment
         public bool IsTorchMonitoring => _torch.NextProduct != null; // Expose torch monitoring status
         public CastingStatus Status => _status; // Expose casting status
@@ -52,9 +53,10 @@ namespace CasterSimulator.Engine
         {
             _status = CastingStatus.ReadyToCast;
 
-            _ladles[_currentLadleIndex].OpenLadle();
-            _status = CastingStatus.LadleOpen;
-
+            // Start the initial rapid fill
+            _ladles[_currentLadleIndex].OpenLadle(300.0); // High initial flow rate
+            _status = CastingStatus.Pouring;
+            
             // Example products
             _productQueue.Enqueue(new Product("Prod1", 10.0));
             _productQueue.Enqueue(new Product("Prod2", 12.0));
@@ -66,7 +68,19 @@ namespace CasterSimulator.Engine
 
             while (_isRunning)
             {
-                // Simulation logic
+                // Monitor and dynamically adjust flow rate
+                if (_tundish.CurrentSteelWeight > 27 * 2204.62) // Prevent overflow
+                {
+                    _ladles[_currentLadleIndex].AdjustPouringRate(150.0); // Lower flow rate
+                }
+                else if (_tundish.CurrentSteelWeight > 20 * 2204.62 && _strand.CastLength < 7.0)
+                {
+                    _ladles[_currentLadleIndex].AdjustPouringRate(200.0); // Adjust during ramp-up
+                }
+                else
+                {
+                    _ladles[_currentLadleIndex].AdjustPouringRate(185.38); // Steady-state rate
+                }
             }
 
             _status = CastingStatus.Cast;
@@ -89,7 +103,7 @@ namespace CasterSimulator.Engine
         {
             _tundish.CastingThresholdReached += (s, e) =>
             {
-                _strand.StartCasting(3.0 / 60.0); // Start with an initial speed of 3 m/min
+                _strand.StartCasting(0, 4.0 / 60.0, 90.0); // Ramp speed from 0 to 4 m/min over 30 seconds
                 _status = CastingStatus.Casting;
             };
             _tundish.TundishEmpty += (s, e) =>
@@ -132,7 +146,7 @@ namespace CasterSimulator.Engine
                 var nextProduct = _productQueue.Dequeue();
                 _torch.SetNextProduct(nextProduct);
             }
-            
+           
         }
 
         private void SwitchLadle()
@@ -146,8 +160,8 @@ namespace CasterSimulator.Engine
 
             var nextLadle = _ladles[_currentLadleIndex];
             RegisterLadleEvents(nextLadle);
-            nextLadle.OpenLadle();
-            _status = CastingStatus.LadleOpen;
+            nextLadle.OpenLadle(300.0); // Start the next ladle with a high flow rate
+            _status = CastingStatus.Pouring;
         }
     }
 }

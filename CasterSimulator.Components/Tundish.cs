@@ -6,6 +6,7 @@ namespace CasterSimulator.Components
     {
         private readonly string tundishId;
         private readonly double thresholdWeight;
+        private readonly double maxWeight;
         private double currentSteelWeight;
 
         public event EventHandler CastingThresholdReached;
@@ -13,15 +14,24 @@ namespace CasterSimulator.Components
 
         public double CurrentSteelWeight => currentSteelWeight;
 
-        public Tundish(string id, double threshold = 12000.0)
+        public Tundish(string id, double threshold = 12000.0, double maxWeight = 27000.0)
         {
             tundishId = id ?? throw new ArgumentNullException(nameof(id));
             thresholdWeight = threshold;
+            this.maxWeight = maxWeight;
         }
 
         public void AddSteel(double weight)
         {
             currentSteelWeight += weight;
+
+            // Prevent overflow
+            if (currentSteelWeight > maxWeight)
+            {
+                currentSteelWeight = maxWeight;
+            }
+
+            // Trigger casting threshold if reached
             if (currentSteelWeight >= thresholdWeight)
             {
                 CastingThresholdReached?.Invoke(this, EventArgs.Empty);

@@ -5,7 +5,7 @@ namespace CasterSimulator.Engine
         Idle,
         DummyBarInsert,
         ReadyToCast,
-        LadleOpen,
+        Pouring,
         Casting,
         Tailout,
         Cast

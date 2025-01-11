@@ -13,8 +13,13 @@ namespace CasterSimulator.Components
         private IDisposable _strandAdvanceSubscription; // Reactive subscription for strand advancement
         private bool _isCasting; // Indicates whether casting is ongoing
         private bool _isTailOut; // Indicates whether the strand is in tail-out mode
+        private double _currentCastSpeed; // Current casting speed in m/s
+        private double _rampTargetSpeed; // Target speed for ramp-up
+        private double _rampDuration; // Duration for speed ramp-up
+        private double _rampElapsedTime; // Elapsed time for ramp-up
         private double lastIncrement; // Last length increment advanced
 
+        public double CastSpeed => _currentCastSpeed * 60;
         public double CastLength => _castLength; // Expose total cast length
         public double StrandLength => _strandLength; // Expose current strand length
         public double TailOffset => _tailOffset; // Expose current tail offset
@@ -33,8 +38,8 @@ namespace CasterSimulator.Components
             _isTailOut = false;
         }
 
-        // Start the casting process
-        public void StartCasting(double castSpeed)
+        // Start the casting process with optional speed ramp-up
+        public void StartCasting(double initialSpeed, double targetSpeed = 0.0, double duration = 0.0)
         {
             if (_isCasting) return;
 
@@ -43,10 +48,14 @@ namespace CasterSimulator.Components
             _castLength = 0.0;
             _strandLength = 0.0;
             _tailOffset = 0.0;
+            _currentCastSpeed = initialSpeed;
+            _rampTargetSpeed = targetSpeed;
+            _rampDuration = duration;
+            _rampElapsedTime = 0.0;
 
             _strandAdvanceSubscription = Observable
                 .Interval(TimeSpan.FromSeconds(1)) // Advance every second
-                .Subscribe(_ => AdvanceStrand(castSpeed));
+                .Subscribe(_ => AdvanceStrand());
         }
 
         // Stop the casting process and switch to tail-out mode
@@ -56,13 +65,23 @@ namespace CasterSimulator.Components
         }
 
         // Advance the strand for a given time interval
-        private void AdvanceStrand(double castSpeed)
+        private void AdvanceStrand()
         {
-            if (castSpeed <= 0)
+            if (_currentCastSpeed <= 0)
                 return;
 
             double deltaTimeSeconds = 1.0; // Interval of 1 second
-            lastIncrement = castSpeed * deltaTimeSeconds;
+
+            // Handle speed ramp-up if applicable
+            if (_rampElapsedTime < _rampDuration)
+            {
+                _rampElapsedTime += deltaTimeSeconds;
+                double rampProgress = Math.Min(_rampElapsedTime / _rampDuration, 1.0);
+                _currentCastSpeed = (1 - rampProgress) * _rampTargetSpeed + rampProgress * _rampTargetSpeed;
+            }
+
+
+            lastIncrement = _currentCastSpeed * deltaTimeSeconds;
 
             if (_isTailOut)
             {
@@ -93,7 +112,13 @@ namespace CasterSimulator.Components
 
             // Trigger the SlabCut event
             SlabCut?.Invoke(this, EventArgs.Empty);
-            Console.WriteLine($"Slab cut performed. Cast Length: {_castLength:F2} meters, Strand Length reset to {_strandLength:F2} meters.");
+        }
+
+        // Stop all strand activity
+        public void StopCasting()
+        {
+            _isCasting = false;
+            _strandAdvanceSubscription?.Dispose();
         }
     }
 }
