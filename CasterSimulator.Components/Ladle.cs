@@ -1,59 +1,52 @@
 ﻿using System;
 using System.Reactive.Linq;
+using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
 {
     public class Ladle
     {
-        private readonly string _heatId;
+        private readonly Heat _heat;
         private readonly double _initialSteelWeight;
         private double _remainingSteelWeight;
         private double _pouringRate;
-        private IDisposable _pouringSubscription;
+        public int HeatId { get; private set; } 
 
-        public event EventHandler<double> SteelPoured; // Event for poured steel
-        public event EventHandler LadleEmpty;
-
-        public string HeatId => _heatId;
+        public event Action<object, double, int> SteelPoured;
+        public event Action<object, int> LadleEmpty;
         public double RemainingSteelWeight => _remainingSteelWeight;
-
         public double PouringRate => _pouringRate;
-        public Ladle(double steelWeight, string heatId, double pouringRate = 200.0)
+
+        public Ladle(Heat heat, double pouringRate = 200.0)
         {
-            this._heatId = heatId;
-            this._initialSteelWeight = steelWeight;
-            this._remainingSteelWeight = steelWeight;
+            HeatId = heat.Id;
+            _heat = heat;
+            this._initialSteelWeight = heat.NetWeight;
+            this._remainingSteelWeight = heat.NetWeight;
             this._pouringRate = pouringRate;
         }
 
-        public void OpenLadle(double initialFlowRate)
+        public async Task OpenAsync(double initialFlowRate, double simulationIntervalSeconds = 1.0)
         {
             _pouringRate = initialFlowRate; // Set the initial high flow rate
-            _pouringSubscription = Observable
-                .Interval(TimeSpan.FromSeconds(1))
-                .Subscribe(_ =>
-                {
-                    if (_remainingSteelWeight <= 0)
-                    {
-                        _pouringSubscription.Dispose();
-                        LadleEmpty?.Invoke(this, EventArgs.Empty);
-                        return;
-                    }
 
-                    double pouredSteel = Math.Min(_pouringRate, _remainingSteelWeight);
-                    _remainingSteelWeight -= pouredSteel;
-                    SteelPoured?.Invoke(this, pouredSteel);
-                });
+            while (_remainingSteelWeight > 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(simulationIntervalSeconds));
+
+                var pouredSteel = Math.Min(_pouringRate, _remainingSteelWeight);
+                _remainingSteelWeight -= pouredSteel;
+                SteelPoured?.Invoke(this, pouredSteel, _heat.Id);
+            }
+
+            LadleEmpty?.Invoke(this, _heat.Id);
         }
 
-        public void AdjustPouringRate(double newRate)
+
+        public void SetPouringRate(double newRate)
         {
             _pouringRate = newRate;
         }
-
-        public void CloseLadle()
-        {
-            _pouringSubscription?.Dispose();
-        }
+        
     }
 }

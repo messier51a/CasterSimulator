@@ -35,7 +35,6 @@ namespace CasterSimulator.Components
                 throw new ArgumentNullException(nameof(product), "Next product cannot be null.");
 
             NextProduct = product;
-            Console.WriteLine($"Next product set: ProductId={product.ProductId}, ProductLength={product.ProductLength:F2} m");
         }
 
         // Raise the CutDone event
@@ -45,8 +44,6 @@ namespace CasterSimulator.Components
 
             // Trigger event with the product information
             CutDone?.Invoke(this, cutProduct);
-
-            Console.WriteLine($"Cut Done: ProductId={cutProduct.ProductId}, ProductLength={cutProduct.ProductLength:F2} m");
 
             // Clear current product after cut
             NextProduct = null;
