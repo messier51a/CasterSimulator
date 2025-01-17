@@ -61,9 +61,9 @@ namespace CasterSimulator
                             $"Ladle Flow Rate: {simulationEngine.CurrentLadle.PouringRate:F2} kg/s"); // Approx flow rate
                         Console.WriteLine($"Tundish Weight: {simulationEngine.TundishWeight:F2} kg");
                         Console.WriteLine($"Cast Speed: {simulationEngine.Strand.CastSpeed:F2} m/min");
-                        Console.WriteLine($"Cast Length: {simulationEngine.Strand.CastLength:F2} m");
+                        Console.WriteLine($"Cast Length: {simulationEngine.Strand.TotalCastLength:F2} m");
                         Console.WriteLine($"Strand Length: {simulationEngine.StrandLength:F2} m");
-                        Console.WriteLine($"Tail Offset: {simulationEngine.Strand.TailOffset:F2} m");
+                        Console.WriteLine($"Tail Offset: {simulationEngine.Strand.TailDistanceFromMold:F2} m");
                         Console.WriteLine(
                             $"Next Product: {(simulationEngine.NextProduct != null ? simulationEngine.NextProduct.ProductId : "None")}");
                         Console.WriteLine($"Casting Status: {simulationEngine.Status}");

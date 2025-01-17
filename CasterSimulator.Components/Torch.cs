@@ -7,7 +7,7 @@ namespace CasterSimulator.Components
     {
         public Product NextProduct { get; private set; } // Next product to be cut
         public double TorchPosition { get; } // Fixed position of the torch in meters
-        private double _currentStrandLength; // Current strand length
+        private double _headDistanceFromMold; // Current strand length
 
         public event EventHandler<Product> CutDone; // Event triggered when a product is cut
 
@@ -17,12 +17,12 @@ namespace CasterSimulator.Components
         }
 
         // Set the current strand length
-        public void SetStrandLength(double strandLength)
+        public void Update(double headDistanceFromMold)
         {
-            _currentStrandLength = strandLength;
+            _headDistanceFromMold = headDistanceFromMold;
 
             // Check if a cut is needed
-            if (NextProduct != null && _currentStrandLength - TorchPosition >= NextProduct.ProductLength)
+            if (NextProduct != null && _headDistanceFromMold - TorchPosition >= NextProduct.LengthAim)
             {
                 OnCutDone();
             }

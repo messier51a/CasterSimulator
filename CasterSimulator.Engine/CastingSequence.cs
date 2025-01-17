@@ -47,7 +47,8 @@ namespace CasterSimulator.Engine
             _torch = new Torch(20.0); // Default torch position
 
             var mold = new Mold("Mold1", 1.56, 0.103);
-            Strand = new Strand(mold, _torch);
+            var speedControl = new SpeedControl(0.1, 4.0, 90);
+            Strand = new Strand(mold, _torch, speedControl, 1);
 
             RegisterTundishEvents();
             RegisterTorchEvents();
@@ -99,7 +100,7 @@ namespace CasterSimulator.Engine
         private void StartPouringRateMonitor()
         {
             _pouringRateSubscription = Observable.Interval(TimeSpan.FromMilliseconds(200))
-                .TakeUntil(_ladleEmptySignal.Task.ToObservable()) // Stop when the ladle is empty
+                .TakeUntil(_ladleEmptySignal.Task.ToObservable())
                 .Subscribe(_ => AdjustPouringRate());
         }
 
@@ -110,7 +111,7 @@ namespace CasterSimulator.Engine
             {
                 _ladle.SetPouringRate(LowPouringRate);
             }
-            else if (_tundish.CurrentSteelWeight > RampUpThreshold && Strand.CastLength < 7.0) // During ramp-up
+            else if (_tundish.CurrentSteelWeight > RampUpThreshold && Strand.TotalCastLength < 7.0) // During ramp-up
             {
                 _ladle.SetPouringRate(RampUpPouringRate);
             }
@@ -129,12 +130,12 @@ namespace CasterSimulator.Engine
         {
             _tundish.CastingThresholdReached += (s, e) =>
             {
-                Strand.StartCasting(0, 4.0 / 60.0, 90.0, 1); // Ramp speed from 0 to 4 m/min over 30 seconds
+                Strand.StartCasting(); // Ramp speed from 0 to 4 m/min over 30 seconds
                 _heats[_ladle.HeatId].Status = HeatStatus.Casting;
                 _torch.SetNextProduct(_sequence.Products.Dequeue());
             };
 
-            _tundish.MixZoneEnded += (s, e) => { _heats[_ladle.HeatId].MixZoneEnd = Strand.CastLength; };
+            _tundish.MixZoneEnded += (s, e) => { _heats[_ladle.HeatId].MixZoneEnd = Strand.TotalCastLength; };
 
             _tundish.TundishEmpty += (s, e) => { Strand.TailOut(); };
 
