@@ -11,11 +11,15 @@ namespace CasterSimulator.Components
 
         public List<Product> Optimize(double steelInStrand, List<Product> cutSchedule)
         {
-            var optimizedSchedule = new List<Product>(cutSchedule); // Initialize with cutSchedule for efficiency
-            double remainingSteel = steelInStrand - cutSchedule.Sum(x => x.LengthAim); // Calculate remainingSteel directly
+            var optimizedSchedule = cutSchedule.OrderBy(x => x.CutNumber).ToList();
+            // Initialize with cutSchedule for efficiency
+            while (optimizedSchedule.Any() && steelInStrand < optimizedSchedule.Sum(x => x.LengthAim))
+            {
+                optimizedSchedule.RemoveAt(optimizedSchedule.Count - 1);
+            }
 
-            if (remainingSteel < 0)
-                throw new ArgumentException("Not enough steel for the initial cut schedule.");
+            double remainingSteel =
+                steelInStrand - cutSchedule.Sum(x => x.LengthAim); // Calculate remainingSteel directly
 
             // Adjust last product's LengthAim if remainingSteel is between 0 and 4
             if (remainingSteel > 0 && remainingSteel < 4)
@@ -55,11 +59,12 @@ namespace CasterSimulator.Components
             while (remainingSteel >= 4)
             {
                 var lastProduct = optimizedSchedule.Last();
-                var product = new Product(Guid.NewGuid().ToString(), lastProduct.LengthAim, lastProduct.LengthMin,
+                var product = new Product(lastProduct.CutNumber + 1, Guid.NewGuid().ToString(), lastProduct.LengthAim,
+                    lastProduct.LengthMin,
                     lastProduct.LengthMax);
 
                 // Use as much remainingSteel as possible, but do not exceed LengthMax
-                product.LengthAim = Math.Min(remainingSteel, product.LengthMax);
+                product.LengthAim = Math.Min(remainingSteel, product.LengthAim);
                 optimizedSchedule.Add(product);
                 remainingSteel -= product.LengthAim;
             }
