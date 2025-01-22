@@ -14,13 +14,13 @@ public class Heat
     public double MixZoneEnd { get; set; }
     public double HeatBoundary { get; set; }
 
-    public Heat(int heatId, string name, double netWeight, DateTime tapTime, string gradeId)
+    public Heat(int heatId, string name, double netWeight, string gradeId)
     {
         if (heatId <= 0) throw new ArgumentException("Heat Id must be greater than 0.");
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Id = heatId;
         NetWeight = netWeight;
-        TapTime = tapTime;
+        //TapTime = tapTime;
         GradeId = gradeId ?? throw new ArgumentNullException(nameof(gradeId));
     }
 }

@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\CasterSimulator.Components\CasterSimulator.Components.csproj" />
+      <ProjectReference Include="..\CasterSimulator.MES\CasterSimulator.MES.csproj" />
+    </ItemGroup>
+
+</Project>
