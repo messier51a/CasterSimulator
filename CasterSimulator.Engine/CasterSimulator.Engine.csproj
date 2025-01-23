@@ -13,6 +13,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\CasterSimulator.Components\CasterSimulator.Components.csproj" />
+      <ProjectReference Include="..\CasterSimulator.MES\CasterSimulator.MES.csproj" />
     </ItemGroup>
 
 </Project>

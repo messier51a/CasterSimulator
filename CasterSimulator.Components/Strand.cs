@@ -23,16 +23,16 @@ namespace CasterSimulator.Components
         public double TotalCastLength => _totalCastLength; // Total cast length in meters
         public double HeadDistanceFromMold => _headDistanceFromMold; // Current strand length in meters
         public double TailDistanceFromMold => _tailDistanceFromMold; // Distance from mold to tail in meters
-        public double CastSpeed => _currentCastSpeed * 60; // Cast speed in meters per minute
+        public double CastSpeed => _currentCastSpeed; // Cast speed in meters per minute
         public event EventHandler<double> StrandAdvanced; // Event triggered when the strand advances
         public event EventHandler CastingFinished; // Event triggered when casting is fully completed
 
-        public Strand(Mold mold, Torch torch, SpeedControl speedControl, double intervalSeconds)
+        public Strand(Mold mold, Torch torch, SpeedControl speedControl)
         {
             _mold = mold ?? throw new ArgumentNullException(nameof(mold));
             _torch = torch ?? throw new ArgumentNullException(nameof(torch));
             _speedControl = speedControl ?? throw new ArgumentNullException(nameof(speedControl));
-            _intervalSeconds = intervalSeconds;
+            _intervalSeconds = 1;
             _currentCastSpeed = 0;
 
             _torch.CutDone += (s, product) => { _headDistanceFromMold = _torch.TorchPosition; };
@@ -53,8 +53,9 @@ namespace CasterSimulator.Components
         }
         private void AdvanceStrand(double deltaTimeSeconds)
         {
-            _currentCastSpeed = _speedControl.CalculateCurrentSpeed(deltaTimeSeconds);
-            _lastIncrement = _currentCastSpeed * deltaTimeSeconds;
+            _currentCastSpeed = _speedControl.CalculateCurrentSpeed(deltaTimeSeconds); 
+            var currentCastSpeedMetersPerSecond = _currentCastSpeed / 60.0;
+            _lastIncrement = currentCastSpeedMetersPerSecond * deltaTimeSeconds;
             _headDistanceFromMold += _lastIncrement;
 
             switch (_strandMode)
