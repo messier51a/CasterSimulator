@@ -15,6 +15,7 @@ namespace CasterSimulator.Engine
         private const double RampUpPouringRate = 90.0; // Ramp-up flow rate in kg/s
         private const double SteadyStateRate = 84.0; // Steady-state flow rate in kg/s
         private const double TorchLocation = 20; //Distance from mold to torch machine in meters.
+        private const double IntervalMilliseconds = 200;
 
         private bool _disposed = false;
         private Dictionary<int, Heat> _heats = new();
@@ -23,6 +24,8 @@ namespace CasterSimulator.Engine
         private readonly Torch _torch;
         private bool _isFirstHeat;
         private TaskCompletionSource<bool> _ladleEmptySignal;
+        private TaskCompletionSource<bool> _castingFinishedSignal;
+        public List<Product> Products { get; private set; } = [];
 
         private IDisposable? _pouringRateSubscription;
         public Dictionary<int, Heat> Heats => _heats;
@@ -50,13 +53,15 @@ namespace CasterSimulator.Engine
 
             var mold = new Mold("Mold1", 1.56, 0.103);
             var speedControl = new SpeedControl(0.1, 4.0, 90);
-            Strand = new Strand(mold, _torch, speedControl);
+            Strand = new Strand(mold, _torch, speedControl, IntervalMilliseconds);
 
             RegisterTundishEvents();
             RegisterTorchEvents();
             RegisterStrandEvents();
 
             _isFirstHeat = true;
+            
+            _castingFinishedSignal = new TaskCompletionSource<bool>();
             
         }
 
@@ -86,7 +91,7 @@ namespace CasterSimulator.Engine
 
                 StartPouringRateMonitor();
                 
-                await _ladle.OpenAsync(300);
+                await _ladle.OpenAsync(300, IntervalMilliseconds);
                 
                 if (!_isFirstHeat)
                 {
@@ -98,20 +103,20 @@ namespace CasterSimulator.Engine
                 await _ladleEmptySignal.Task;
             }
 
+            await _castingFinishedSignal.Task;
             // Trigger SequenceDone event
             SequenceDone?.Invoke(this, _sequence.Id);
         }
 
         private void StartPouringRateMonitor()
         {
-            _pouringRateSubscription = Observable.Interval(TimeSpan.FromMilliseconds(1000))
+            _pouringRateSubscription = Observable.Interval(TimeSpan.FromMilliseconds(IntervalMilliseconds))
                 .TakeUntil(_ladleEmptySignal.Task.ToObservable())
                 .Subscribe(_ => AdjustPouringRate());
         }
 
         private void AdjustPouringRate()
         {
-            Console.WriteLine("StartPouringRateMonitor called.");
             // Monitor and dynamically adjust flow rate
             if (_tundish.CurrentSteelWeight > MaxTundishWeight) // Prevent overflow
             {
@@ -119,7 +124,6 @@ namespace CasterSimulator.Engine
             }
             else if (_tundish.CurrentSteelWeight < RampUpThreshold && Strand.TotalCastLength < 7.0) // During ramp-up
             {
-                Console.WriteLine($"Adjusting pouring rate: {_tundish.CurrentSteelWeight}");
                 _ladle.SetPouringRate(RampUpPouringRate);
             }
             else
@@ -152,12 +156,14 @@ namespace CasterSimulator.Engine
         private void RegisterStrandEvents()
         {
             Strand.StrandAdvanced += (s, massFlow) => { _tundish.RemoveSteel(massFlow); };
+            Strand.CastingFinished += (s, e) => { _castingFinishedSignal.TrySetResult(true); };
         }
 
         private void RegisterTorchEvents()
         {
             _torch.CutDone += (s, product) =>
             {
+                Products.Add(product.Clone());
                 var nextProduct = _sequence.Products.Dequeue();
                 _torch.SetNextProduct(nextProduct);
             };

@@ -14,9 +14,9 @@ public static class Schedule
         var sequence = new Sequence(sequenceId);
         var totalHeats = new Random().Next(3, 8);
         var cutCount = 0;
+        var heatId = GetSecondsSince2024();
         for (var i = 0; i < totalHeats; i++)
         {
-            var heatId = GetSecondsSince2024();
             var heatCount = i.ToString("D2");
             var heatName = $"{sequenceId}-{heatCount}";
             var heatWeight = new Random().Next(160000, 200000);
@@ -44,6 +44,8 @@ public static class Schedule
 
                 cutCount++;
             }
+
+            heatId++;
         }
 
         return sequence;
@@ -52,13 +54,13 @@ public static class Schedule
     static int CalculateNumberOfSlabs(double steelInKgs, double slabWidth, double slabThickness, double slabLength)
     {
         // Calculate the volume of one slab in cubic meters
-        double slabVolume = slabWidth * slabThickness * slabLength; // Dimensions are in meters
+        var slabVolume = slabWidth * slabThickness * slabLength; // Dimensions are in meters
 
         // Steel density (assumed to be 7850 kg/m³)
         double steelDensity = 7850;
 
         // Calculate the mass of one slab in kgs
-        double slabMass = slabVolume * steelDensity;
+        var slabMass = slabVolume * steelDensity;
 
         // Calculate the number of slabs that can be produced
         return (int)(steelInKgs / slabMass);
@@ -66,15 +68,15 @@ public static class Schedule
 
     static double GetRandomProductLength(double min, double max)
     {
-        Random random = new Random();
-        double randomValue = random.NextDouble() * (max - min) + min;
+        var random = new Random();
+        var randomValue = random.NextDouble() * (max - min) + min;
         return Math.Ceiling(randomValue * 2) / 2;
     }
 
     private static int GetSecondsSince2024()
     {
-        DateTime startDate = new DateTime(2024, 1, 1, 0, 0, 0);
-        DateTime now = DateTime.Now;
+        var startDate = new DateTime(2024, 1, 1, 0, 0, 0);
+        var now = DateTime.Now;
         return (int)(now - startDate).TotalSeconds;
     }
 }

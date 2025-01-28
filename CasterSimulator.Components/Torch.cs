@@ -15,37 +15,22 @@ namespace CasterSimulator.Components
         {
             TorchPosition = torchPosition;
         }
-
-        // Set the current strand length
         public void Update(double headDistanceFromMold)
         {
             _headDistanceFromMold = headDistanceFromMold;
-
-            // Check if a cut is needed
-            if (NextProduct != null && _headDistanceFromMold - TorchPosition >= NextProduct.LengthAim)
-            {
-                OnCutDone();
-            }
+            var length = headDistanceFromMold - TorchPosition;
+            if (NextProduct is null || length < NextProduct.LengthAim) return;
+            NextProduct.LengthCut = length;
+            OnCutDone();
         }
-
-        // Set the next product to be cut
         public void SetNextProduct(Product product)
         {
-            if (product == null)
-                throw new ArgumentNullException(nameof(product), "Next product cannot be null.");
-
-            NextProduct = product;
+            NextProduct = product ?? throw new ArgumentNullException(nameof(product), "Next product cannot be null.");
         }
-
-        // Raise the CutDone event
         private void OnCutDone()
         {
             var cutProduct = NextProduct;
-
-            // Trigger event with the product information
             CutDone?.Invoke(this, cutProduct);
-
-            // Clear current product after cut
             NextProduct = null;
         }
     }

@@ -15,13 +15,15 @@ public class SpeedControl
         _elapsedTime = 0;
     }
 
-    public double CalculateCurrentSpeed(double deltaTime)
+    public double CalculateCurrentSpeed(double deltaTimeMilliseconds)
     {
+        var deltaTimeSeconds = deltaTimeMilliseconds / 1000.0;
+        
         if (_elapsedTime >= _duration)
             return _targetSpeed;
 
-        _elapsedTime += deltaTime;
-        double progress = Math.Min(_elapsedTime / _duration, 1.0);
+        _elapsedTime += deltaTimeSeconds;
+        var progress = Math.Min(_elapsedTime / _duration, 1.0);
         return _startSpeed + (progress * (_targetSpeed - _startSpeed));
     }
 }
