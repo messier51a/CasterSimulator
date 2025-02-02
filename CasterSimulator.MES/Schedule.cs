@@ -5,29 +5,30 @@ namespace CasterSimulator.MES;
 public static class Schedule
 {
     private static string[] _grades = new string[] { "X1000", "X1020", "T601", "T602" };
+    private static double _steelDensity;
 
-    public static Sequence GetSquence()
+    public static Sequence GetSquence(double width, double thickness, double steelDensity)
     {
         // Format the date and time as an integer in yyyyMMddHHmm
-
+        _steelDensity = steelDensity;
         var sequenceId = long.Parse(DateTime.Now.ToString("yyMMddHHmm"));
-        var sequence = new Sequence(sequenceId);
-        var totalHeats = new Random().Next(3, 8);
+        var sequence = new Sequence(sequenceId, width, thickness, steelDensity);
+        var totalHeats = new Random().Next(3, 3);
         var cutCount = 0;
-        var heatId = GetSecondsSince2024();
+        var heatId = GetMinutesSince2024();
         for (var i = 0; i < totalHeats; i++)
         {
             var heatCount = i.ToString("D2");
             var heatName = $"{sequenceId}-{heatCount}";
-            var heatWeight = new Random().Next(160000, 200000);
+            var heatWeight = new Random().Next(100000, 150000);
 
-            var heat = new Heat(heatId, heatName, heatWeight, _grades[0]);
+            var heat = new Heat(heatId, heatName, heatWeight, _grades[new Random().Next(_grades.Length)]);
             sequence.Heats.Enqueue(heat);
-            var productAverageLength = GetRandomProductLength(16, 20);
+            var productAverageLength = GetRandomProductLength(5, 8);
             var totalEstimatedSlabs = CalculateNumberOfSlabs(
                 heat.NetWeight,
-                1.56d,
-                0.103d,
+                width,
+                thickness,
                 productAverageLength);
 
             Console.WriteLine($"Total Estimated Slabs: {totalEstimatedSlabs}");
@@ -46,6 +47,8 @@ public static class Schedule
             }
 
             heatId++;
+            
+            Thread.Sleep(100);
         }
 
         return sequence;
@@ -57,10 +60,10 @@ public static class Schedule
         var slabVolume = slabWidth * slabThickness * slabLength; // Dimensions are in meters
 
         // Steel density (assumed to be 7850 kg/m³)
-        double steelDensity = 7850;
+
 
         // Calculate the mass of one slab in kgs
-        var slabMass = slabVolume * steelDensity;
+        var slabMass = slabVolume * _steelDensity;
 
         // Calculate the number of slabs that can be produced
         return (int)(steelInKgs / slabMass);
@@ -73,10 +76,10 @@ public static class Schedule
         return Math.Ceiling(randomValue * 2) / 2;
     }
 
-    private static int GetSecondsSince2024()
+    private static int GetMinutesSince2024()
     {
         var startDate = new DateTime(2024, 1, 1, 0, 0, 0);
         var now = DateTime.Now;
-        return (int)(now - startDate).TotalSeconds;
+        return (int)(now - startDate).TotalMinutes;
     }
 }

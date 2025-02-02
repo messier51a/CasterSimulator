@@ -1,84 +1,118 @@
-using System;
+using System.Reactive.Linq;
 
 namespace CasterSimulator.Components
 {
-    public class Turret
+    public enum ArmsEnum
     {
-        private Ladle activeLadle; // Ladle currently aligned with the tundish
-        private Ladle nextLadle; // Ladle waiting in the alternate position
-        private bool isRotating; // Indicates if the turret is rotating
-        private double rotationTimeRemaining; // Time left for the turret to complete rotation (in seconds)
-        private readonly double rotationDuration; // Total time required for turret rotation (in seconds)
+        Arm1,
+        Arm2
+    }
 
-        public Ladle ActiveLadle => activeLadle; // Expose the active ladle
-        public bool IsRotating => isRotating; // Expose rotation status
+    public class Turret : IDisposable
+    {
+        private bool _disposed;
+        public bool IsRotating { get; private set; }
 
-        public Turret(Ladle initialLadle, double rotationDuration = 60.0)
+        private readonly double _rotationDuration;
+
+        private readonly Ladle[] _ladles = new Ladle[2];
+
+        public ArmsEnum ArmNumInCastPosition { get; private set; } = ArmsEnum.Arm1;
+        public ArmsEnum ArmInLoadPosition => ArmNumInCastPosition == ArmsEnum.Arm1 ? ArmsEnum.Arm2 : ArmsEnum.Arm1;
+        public Ladle LadleInCastPosition => _ladles[(int)ArmNumInCastPosition];
+        public Ladle LadleInLoadPosition => _ladles[(int)ArmInLoadPosition];
+        public event EventHandler? Rotated; // Event triggered when the strand advances
+        public event EventHandler? LadleArrivedAtCastPosition; // Event triggered when the strand advances
+        
+        public Turret(double rotationDuration = 10.0)
         {
-            if (initialLadle == null)
-                throw new ArgumentNullException(nameof(initialLadle), "An initial ladle must be provided.");
-
-            activeLadle = initialLadle;
-            nextLadle = null;
-            isRotating = false;
-            this.rotationDuration = rotationDuration;
-            rotationTimeRemaining = 0.0;
+            ArgumentOutOfRangeException.ThrowIfLessThan(rotationDuration, 10);
+            _rotationDuration = rotationDuration;
         }
 
-        // Loads the next ladle into the turret
-        public void LoadLadle(Ladle ladle)
+        /// <summary>
+        /// Attempts to remove a ladle from the specified turret arm.
+        /// </summary>
+        /// <param name="armNumber">The arm from which to remove the ladle.</param>
+        /// <returns>
+        /// <c>true</c> if the ladle was successfully removed; <c>false</c> if the arm is in the cast position or there is no ladle to remove.
+        /// </returns>
+        public Ladle RemoveLadle(ArmsEnum armNumber)
         {
-            if (ladle == null)
-                throw new ArgumentNullException(nameof(ladle), "A ladle must be provided to load.");
+            if (ArmNumInCastPosition == armNumber)
+                throw new ArgumentException($"Arm {armNumber} is in casting position.");
 
-            if (nextLadle != null)
-                throw new InvalidOperationException("The turret already has a ladle waiting in the alternate position.");
+            if (_ladles[(int)armNumber] is null)
+                throw new ArgumentException($"No ladle found at Arm {armNumber}.");
 
-            nextLadle = ladle;
+            var ladle = _ladles[(int)armNumber];
+            _ladles[(int)armNumber] = null;
+            return ladle;
         }
 
-        // Starts turret rotation to switch the ladle positions
-        public void StartRotation()
+        /// <summary>
+        /// Attempts to add a new ladle to the turret arm currently in the load position.  
+        /// The ladle must meet the minimum weight requirement.
+        /// </summary>
+        /// <param name="newLadle">The ladle to be added. Cannot be null and must weigh at least 20,000 kg.</param>
+        /// <returns>
+        /// <c>true</c> if the ladle was successfully added; otherwise, an exception is thrown.
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="newLadle"/> is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="newLadle"/> weighs less than 20,000 kg.</exception>
+        public void AddLadle(Ladle newLadle)
         {
-            if (isRotating)
-                throw new InvalidOperationException("The turret is already rotating.");
-
-            if (nextLadle == null)
-                throw new InvalidOperationException("No ladle is available in the alternate position for rotation.");
-
-            isRotating = true;
-            rotationTimeRemaining = rotationDuration;
-            Console.WriteLine("Turret rotation started.");
+            ArgumentNullException.ThrowIfNull(newLadle);
+            ArgumentOutOfRangeException.ThrowIfLessThan(newLadle.NetWeight, 20000);
+            if (IsRotating) throw new InvalidOperationException($"Cannot add ladle to a rotating turret");
+            _ladles[(int)ArmInLoadPosition] = newLadle;
         }
 
-        // Updates the turret state for a given time interval
-        public void Update(double deltaTimeSeconds)
+
+        /// <summary>
+        /// Rotates the turret to switch arms. Ensures that rotation does not occur while another rotation is in progress
+        /// and that the ladle in the cast position is closed before proceeding.
+        /// </summary>
+        /// <returns>A task that completes after the rotation duration.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the turret is already rotating or if the ladle in the cast position is open.
+        /// </exception>
+        public async Task Rotate()
         {
-            if (!isRotating || deltaTimeSeconds <= 0)
+            if (IsRotating)
                 return;
 
-            rotationTimeRemaining -= deltaTimeSeconds;
+            var ladleCasting = _ladles[(int)ArmNumInCastPosition];
+            if (ladleCasting is not null && ladleCasting.State == LadleState.Open)
+                return;
 
-            if (rotationTimeRemaining <= 0)
+            IsRotating = true;
+            await Task.Delay(TimeSpan.FromSeconds(_rotationDuration));
+            IsRotating = false;
+
+            ArmNumInCastPosition = ArmNumInCastPosition == ArmsEnum.Arm1 ? ArmsEnum.Arm2 : ArmsEnum.Arm1;
+            Rotated?.Invoke(this, EventArgs.Empty);
+        }
+        public void Dispose()
+        {
+            Dispose(true); // Explicit disposal
+            GC.SuppressFinalize(this); // Suppress finalization
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            if (disposing)
             {
-                CompleteRotation();
+         
             }
+
+            _disposed = true;
         }
 
-        // Completes the turret rotation and switches the ladle positions
-        public void CompleteRotation()
+        ~Turret()
         {
-            if (!isRotating)
-                return;
-
-            isRotating = false;
-            rotationTimeRemaining = 0.0;
-
-            // Switch ladle positions
-            activeLadle = nextLadle;
-            nextLadle = null;
-
-            Console.WriteLine("Turret rotation completed. New active ladle: " + activeLadle.HeatId);
+            Dispose(false);
         }
     }
 }

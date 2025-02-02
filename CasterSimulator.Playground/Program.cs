@@ -7,7 +7,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        var sequence = Schedule.GetSquence();
+        var sequence = Schedule.GetSquence(1.56,0.103,7850);
 
         foreach (var heat in sequence.Heats)
         {

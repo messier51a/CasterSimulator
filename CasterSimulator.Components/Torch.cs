@@ -6,32 +6,30 @@ namespace CasterSimulator.Components
     public class Torch
     {
         public Product NextProduct { get; private set; } // Next product to be cut
-        public double TorchPosition { get; } // Fixed position of the torch in meters
-        private double _headDistanceFromMold; // Current strand length
-
+        public double TorchLocation { get; } // Fixed position of the torch in meters
+        private double _increment;
+        public double MeasuredCutLength { get; private set; }
         public event EventHandler<Product> CutDone; // Event triggered when a product is cut
 
-        public Torch(double torchPosition = 20.0)
+        public Torch(double torchLocation)
         {
-            TorchPosition = torchPosition;
+            TorchLocation = torchLocation;
         }
-        public void Update(double headDistanceFromMold)
+
+        public void Measure(double increment)
         {
-            _headDistanceFromMold = headDistanceFromMold;
-            var length = headDistanceFromMold - TorchPosition;
-            if (NextProduct is null || length < NextProduct.LengthAim) return;
-            NextProduct.LengthCut = length;
-            OnCutDone();
+            _increment += increment;
+            //Console.WriteLine($"MeasuredCutLength raw: {_increment - TorchLocation}");
+            MeasuredCutLength = double.Max(0, _increment - TorchLocation);
+            if (MeasuredCutLength < NextProduct.LengthAim) return;
+            NextProduct.CutLength = MeasuredCutLength;
+            _increment = TorchLocation;
+            CutDone?.Invoke(this, NextProduct);
         }
+
         public void SetNextProduct(Product product)
         {
             NextProduct = product ?? throw new ArgumentNullException(nameof(product), "Next product cannot be null.");
-        }
-        private void OnCutDone()
-        {
-            var cutProduct = NextProduct;
-            CutDone?.Invoke(this, cutProduct);
-            NextProduct = null;
         }
     }
 }

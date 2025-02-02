@@ -4,20 +4,21 @@ namespace CasterSimulator.Components
 {
     public class Mold
     {
-        private readonly string moldId; // Unique identifier for the mold
-        private readonly double width; // Mold width in meters
-        private readonly double thickness; // Mold thickness in meters
-        private readonly double height = 1.8; // Fixed mold height in meters
-        private readonly Random random; // For simulating mold level fluctuations
+        private readonly Random _random; // For simulating mold level fluctuations
+        public string MoldId { get; }
+        public double Width { get; }
 
-        private double moldLevel; // Current steel level in the mold (in mm)
+        public double Thickness { get; }
 
-        public string MoldId => moldId;
-        public double Width => width; // Expose width
-        public double Thickness => thickness; // Expose thickness
-        public double Height => height; // Expose height
-        public double MoldLevel => moldLevel; // Expose current mold level
+        public double MoldLevel { get; private set; }
 
+        /// <summary>
+        /// Represents a mold used in the continuous casting process.
+        /// </summary>
+        /// <param name="id">The unique identifier for the mold. Cannot be null, empty, or whitespace.</param>
+        /// <param name="width">The width of the mold in meters. Must be greater than zero.</param>
+        /// <param name="thickness">The thickness of the mold in millimeters. Must be greater than zero.</param>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="id"/> is invalid or if <paramref name="width"/> or <paramref name="thickness"/> are not greater than zero.</exception>
         public Mold(string id, double width, double thickness)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -26,12 +27,13 @@ namespace CasterSimulator.Components
             if (width <= 0 || thickness <= 0)
                 throw new ArgumentException("Width and thickness must be greater than zero.");
 
-            moldId = id;
-            this.width = width;
-            this.thickness = thickness;
-            moldLevel = -182; // Default starting level in millimeters
-            random = new Random();
+            MoldId = id;
+            Width = width;
+            Thickness = thickness;
+            MoldLevel = -182; // Default starting level in millimeters
+            _random = new Random();
         }
+
 
         // Simulates fluctuations in the mold level
         public void Update(double deltaTimeSeconds)
@@ -40,17 +42,21 @@ namespace CasterSimulator.Components
                 return;
 
             // Randomly fluctuate the mold level by ±1 mm
-            double fluctuation = (random.NextDouble() * 2 - 1); // Random value between -1 and +1
-            moldLevel += fluctuation;
+            var fluctuation = (_random.NextDouble() * 2 - 1); // Random value between -1 and +1
+            MoldLevel += fluctuation;
 
             // Clamp the mold level within realistic bounds
-            moldLevel = Math.Clamp(moldLevel, -185, -175);
+            MoldLevel = Math.Clamp(MoldLevel, -185, -175);
         }
 
-        // Calculates the cross-sectional area of the mold
+        /// <summary>
+        /// Calculates the cross-sectional area of the mold.
+        /// </summary>
+        /// <returns>The cross-sectional area in square meters.</returns>
         public double GetCrossSectionalArea()
         {
-            return width * thickness; // Area in square meters
+            return Width * Thickness;
         }
+
     }
 }

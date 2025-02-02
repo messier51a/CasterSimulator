@@ -10,7 +10,15 @@
         
         public double LengthMin { get; set; }
 
-        public double LengthCut { get; set; }
+        public double CutLength { get; set; }
+        
+        public double Width { get; set; }
+        
+        public double Thickness { get; set; }
+
+        public double Weight { get; set; }
+
+        public double CastLengthStart { get; set; }
 
         public Product(int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
         {
@@ -32,7 +40,7 @@
                 LengthAim = this.LengthAim,
                 LengthMax = this.LengthMax,
                 LengthMin = this.LengthMin,
-                LengthCut = this.LengthCut
+                CutLength = this.CutLength
             };
         }
     }

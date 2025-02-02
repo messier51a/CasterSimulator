@@ -10,6 +10,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Playground"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.MES", "CasterSimulator.MES\CasterSimulator.MES.csproj", "{CC7B3FB4-5A38-4E6A-B7BD-1E107E3BD821}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Enums", "CasterSimulator.Enums\CasterSimulator.Enums.csproj", "{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.VictoriaMetrics", "CasterSimulator.VictoriaMetrics\CasterSimulator.VictoriaMetrics.csproj", "{DB8D3D23-6442-4494-995F-B790AEAB4465}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Streaming", "CasterSimulator.Streaming\CasterSimulator.Streaming.csproj", "{1E2674B2-D126-42BF-A336-5FE1DD6810DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +42,17 @@ Global
 		{CC7B3FB4-5A38-4E6A-B7BD-1E107E3BD821}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC7B3FB4-5A38-4E6A-B7BD-1E107E3BD821}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC7B3FB4-5A38-4E6A-B7BD-1E107E3BD821}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB8D3D23-6442-4494-995F-B790AEAB4465}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB8D3D23-6442-4494-995F-B790AEAB4465}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB8D3D23-6442-4494-995F-B790AEAB4465}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB8D3D23-6442-4494-995F-B790AEAB4465}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

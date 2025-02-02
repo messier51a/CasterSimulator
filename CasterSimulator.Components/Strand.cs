@@ -6,73 +6,53 @@ namespace CasterSimulator.Components
 {
     public class Strand : IDisposable
     {
-        private readonly Mold _mold;
-        private readonly Torch _torch;
-        private double _lastIncrement;
-        private double _massFlow;
+        private bool _disposed;
         private IDisposable? _strandMonitorSubscription;
-        private StrandMode _strandMode;
-        private readonly double _intervalMilliseconds;
+        private StrandMode _strandMode = StrandMode.Idle;
         private readonly SpeedControl _speedControl;
-        public double SteelLeftOnStrand => Math.Max(HeadDistanceFromMold - TailDistanceFromMold, 0);
+
         public StrandMode Mode => _strandMode;
+
+        public double CastLengthIncrement { get; private set; }
         public double TotalCastLength { get; private set; }
-
-        public double HeadDistanceFromMold { get; private set; }
-
         public double TailDistanceFromMold { get; private set; }
-
+        public double HeadDistanceFromMold { get; private set; }
         public double CastSpeed { get; private set; }
+        public event EventHandler? Advanced; // Event triggered when the strand advances
+        
 
-        public event EventHandler<double>? StrandAdvanced; // Event triggered when the strand advances
-        public event EventHandler? CastingFinished; // Event triggered when casting is fully completed
-
-        public Strand(Mold mold, Torch torch, SpeedControl speedControl, double intervalMilliseconds = 1000)
+        public Strand(double targetCastSpeed, double speedRampDuration = 90)
         {
-            _mold = mold ?? throw new ArgumentNullException(nameof(mold));
-            _torch = torch ?? throw new ArgumentNullException(nameof(torch));
-            _speedControl = speedControl ?? throw new ArgumentNullException(nameof(speedControl));
-            _intervalMilliseconds = intervalMilliseconds;
+            _speedControl  = new SpeedControl(0.1, targetCastSpeed, speedRampDuration);
             CastSpeed = 0;
-
-            _torch.CutDone += (s, product) => { HeadDistanceFromMold = _torch.TorchPosition; };
         }
-
-        public void StartCasting()
+        public void Start()
         {
             _strandMode = StrandMode.Casting;
 
             _strandMonitorSubscription = Observable
-                .Interval(TimeSpan.FromMilliseconds(_intervalMilliseconds))
-                .Subscribe(_ => AdvanceStrand(_intervalMilliseconds));
+                .Interval(TimeSpan.FromSeconds(1))
+                .Subscribe(_ => AdvanceStrand());
         }
         
         public void TailOut()
         {
             _strandMode = StrandMode.Tailout;
         }
-        private void AdvanceStrand(double deltaTimeMilliseconds)
+        private void AdvanceStrand()
         {
-            CastSpeed = _speedControl.CalculateCurrentSpeed(deltaTimeMilliseconds); 
-            var currentCastSpeedMetersPerSecond = CastSpeed / 60.0;
-            _lastIncrement = currentCastSpeedMetersPerSecond * (deltaTimeMilliseconds / 1000.0);
-            HeadDistanceFromMold += _lastIncrement;
+            CastSpeed = _speedControl.CalculateCurrentSpeed(); 
+            CastLengthIncrement = CastSpeed / 60.0;
+            HeadDistanceFromMold += CastLengthIncrement;
 
             switch (_strandMode)
             {
                 case StrandMode.Tailout:
-                    TailDistanceFromMold += _lastIncrement;
-                    // Trigger CastingFinished when tail crosses the torch position
-                    if (TailDistanceFromMold > _torch.TorchPosition)
-                    {
-                        StopCasting();
-                        CastingFinished?.Invoke(this, EventArgs.Empty);
-                    }
-
+                    TailDistanceFromMold += CastLengthIncrement;
                     break;
 
                 case StrandMode.Casting:
-                    TotalCastLength += _lastIncrement;
+                    TotalCastLength += CastLengthIncrement;
                     break;
 
                 case StrandMode.Idle:
@@ -84,18 +64,10 @@ namespace CasterSimulator.Components
                     throw new ArgumentOutOfRangeException();
             }
             
-            _torch.Update(HeadDistanceFromMold);
-
-            // Calculate mass flow
-            var crossSectionalArea = _mold.GetCrossSectionalArea(); // m²
-            var steelDensity = 7850; // kg/m³
-            _massFlow = crossSectionalArea * _lastIncrement * steelDensity; // kg
-
-            // Notify listeners
-            StrandAdvanced?.Invoke(this, _massFlow);
+            Advanced?.Invoke(this, EventArgs.Empty);
         }
 
-        private void StopCasting()
+        public void Stop()
         {
             _strandMode = StrandMode.Idle;
             _strandMonitorSubscription?.Dispose();
@@ -104,16 +76,26 @@ namespace CasterSimulator.Components
 
         public void Dispose()
         {
-            _strandMonitorSubscription?.Dispose();
+            Dispose(true); 
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            if (disposing)
+            {
+               _strandMonitorSubscription?.Dispose();
+            }
+
+            _disposed = true;
+        }
+
+        ~Strand()
+        {
+            Dispose(false);
         }
     }
 
-    public enum StrandMode
-    {
-        Idle,
-        DummyBarInsert,
-        ReadyToCast,
-        Casting,
-        Tailout
-    }
+   
 }

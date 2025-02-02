@@ -1,85 +1,125 @@
 using System;
+using System.Reflection.Metadata.Ecma335;
+using System.Xml.Schema;
+using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
 {
-    public class Tundish
+    public class TundishHeat
     {
-        private readonly string tundishId;
-        private readonly double _thresholdWeight;
-        private readonly double _maxWeight;
-        private double _currentSteelWeight;
-        private double _steelWeightAtHeatBoundary;
-        private double _tundishMixSteelWeight = 0.0; // Remaining mix steel weight (kg)
-        private bool _isMixZoneActive = false; // Tracks if mix zone is active
-        private bool _thresholdReached;
+        public Heat Heat { get; init; }
+        public double Weight { get; set; }
 
-        public event EventHandler CastingThresholdReached;
-        public event EventHandler TundishEmpty;
-        public event EventHandler MixZoneEnded;
-        public event EventHandler NextHeatOnStrand;
-
-        public double CurrentSteelWeight => _currentSteelWeight;
-
-        public Tundish(string id, double threshold = 6000.0, double maxWeight = 27000.0)
+        public TundishHeat(Heat heat)
         {
-            tundishId = id ?? throw new ArgumentNullException(nameof(id));
-            _thresholdWeight = threshold;
-            this._maxWeight = maxWeight;
+            Heat = heat;
+            Weight = 0;
+        }
+    }
+
+    public class Tundish : IDisposable
+    {
+        private bool _disposed;
+        private readonly double _thresholdWeight;
+        private bool _thresholdReached;
+        private bool _heatOnStrand;
+        private Queue<TundishHeat> _tundishHeats = new();
+        public TundishHeat[] Heats => _tundishHeats.ToArray();
+        public event EventHandler WeightThresholdReached;
+        public event EventHandler Empty;
+        public event EventHandler<int>? HeatOnStrand;
+
+        public string Id { get; private set; }
+        public double NetWeight => _tundishHeats.Sum(x => x.Weight);
+
+        public Tundish(string id, double thresholdWeight)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentException("Tundish ID must be a valid string.", nameof(id));
+            ArgumentOutOfRangeException.ThrowIfLessThan(thresholdWeight, 3000);
+            Id = id;
+            _thresholdWeight = thresholdWeight;
+        }
+
+        public void AddHeat(Heat heat)
+        {
+            if (_tundishHeats.Count == 2) throw new InvalidOperationException("Too many heats in tundish.");
+
+            _tundishHeats.Enqueue(new TundishHeat(heat));
         }
 
         public void AddSteel(double weight)
         {
-            _currentSteelWeight += weight;
+            var lastHeat = _tundishHeats.LastOrDefault();
+            if (lastHeat is null) throw new InvalidOperationException();
+            lastHeat.Weight += weight;
 
-            // Prevent overflow
-            if (_currentSteelWeight > _maxWeight)
+            if (!_thresholdReached && NetWeight >= _thresholdWeight)
             {
-                _currentSteelWeight = _maxWeight;
-            }
-
-            // Trigger casting threshold if reached and not already triggered
-            if (!_thresholdReached && _currentSteelWeight >= _thresholdWeight)
-            {
-                _thresholdReached = true; // Mark as triggered
-                CastingThresholdReached?.Invoke(this, EventArgs.Empty);
+                _thresholdReached = true;
+                WeightThresholdReached?.Invoke(this, EventArgs.Empty);
             }
         }
 
         public void RemoveSteel(double weight)
         {
-            if (_currentSteelWeight <= 0)
+            while (true)
             {
-                TundishEmpty?.Invoke(this, EventArgs.Empty);
-                return;
-            }
+                if (weight <= 0 || NetWeight <= 0) return;
 
-            _currentSteelWeight = Math.Max(0, _currentSteelWeight - weight);
+                if (_tundishHeats.Count == 0) throw new InvalidOperationException($"No heats in tundish.");
 
-            // Decrement mix zone steel weight if active
-            if (_isMixZoneActive)
-            {
-                _tundishMixSteelWeight -= weight;
+                var heat = _tundishHeats.Peek();
 
-                if (_tundishMixSteelWeight <= 0)
+                if (!_heatOnStrand)
                 {
-                    _isMixZoneActive = false;
-                    MixZoneEnded?.Invoke(this, EventArgs.Empty);
+                    HeatOnStrand?.Invoke(this, heat.Heat.Id);
+                    _heatOnStrand = true;
                 }
-            }
 
-            if (_steelWeightAtHeatBoundary > 0)
-            {
-                _steelWeightAtHeatBoundary = Math.Max(0, _steelWeightAtHeatBoundary - weight);
-                if (_steelWeightAtHeatBoundary==0)
-                    NextHeatOnStrand?.Invoke(this, EventArgs.Empty);
+                if (heat.Weight > weight)
+                {
+                    heat.Weight -= weight;
+                }
+                else
+                {
+                    weight -= heat.Weight;
+                    _tundishHeats.Dequeue();
+                    if (_tundishHeats.Count == 0)
+                    {
+                        Empty?.Invoke(this, EventArgs.Empty);
+                    }
+                    else
+                    {
+                        _heatOnStrand = false;
+                        continue;
+                    }
+                }
+
+                break;
             }
         }
 
-        public void MixZoneStart()
+        public void Dispose()
         {
-            _steelWeightAtHeatBoundary = _currentSteelWeight;
-            _tundishMixSteelWeight = _currentSteelWeight * 0.5;
-            _isMixZoneActive = true;
+            Dispose(true); // Explicit disposal
+            GC.SuppressFinalize(this); // Suppress finalization
+        }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            if (disposing)
+            {
+            }
+
+            _disposed = true;
+        }
+
+        ~Tundish()
+        {
+            Dispose(false);
         }
     }
 }

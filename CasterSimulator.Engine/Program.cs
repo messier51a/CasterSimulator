@@ -1,9 +1,16 @@
 ﻿using System;
+using System.IO.Pipes;
+using System.Net.Sockets;
 using System.Reactive.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Text.Json;
 using CasterSimulator.Components;
 using CasterSimulator.Engine;
 using CasterSimulator.Models;
 using System.Threading.Tasks;
+using CasterSimulator.Streaming;
+using Newtonsoft.Json;
 
 namespace CasterSimulator
 {
@@ -11,58 +18,67 @@ namespace CasterSimulator
     {
         static async Task Main(string[] args)
         {
+      
+            var _url = "http://localhost:3000/api/live/push";
+            var _token = "glsa_2fhbu1izgcxGkzjZO93ceJfMrLVtWPhf_771b924f"; // Replace this
+            var channel = new Channel("overview", _url, _token);
+            var signals = channel.GetSignals("s1");
+
             Console.WriteLine("=== Steel Casting Simulation ===");
 
             try
             {
                 // Retrieve sequence and initialize simulation engine
-                var sequence = MES.Schedule.GetSquence();
+                var sequence = MES.Schedule.GetSquence(1.56d, 0.103d, 7850);
                 Console.WriteLine($"Total heats {sequence.Heats.Count}");
-                var simulationEngine = new CastingSequence(sequence);
+                using var tracking = new Tracking();
 
-                // Initialize console layout
-                int cursorTop = Console.CursorTop;
 
                 // Observable interval for periodic logging
                 using var periodicLogger = Observable.Interval(TimeSpan.FromMilliseconds(1000))
-                    .Subscribe(_ =>
+                    .Subscribe(async _ =>
                     {
-                        // Set cursor to the top logging position
-                        Console.SetCursorPosition(0, cursorTop);
-                        Console.WriteLine("[Process State]");
-                        Console.WriteLine($"Total heats: {sequence.Heats.Count}");
-                        Console.WriteLine($"Total products queued: {sequence.Products.Count}");
-                        Console.WriteLine($"Current Ladle: {simulationEngine.Ladle?.HeatId}");
-                        Console.WriteLine(
-                            $"Current Ladle Weight: {simulationEngine.Ladle?.RemainingSteelWeight:F2} kg");
-                        Console.WriteLine($"Ladle Flow Rate: {simulationEngine.Ladle?.PouringRate:F2} kg/s");
-                        Console.WriteLine($"Tundish Weight: {simulationEngine.Tundish.CurrentSteelWeight:F2} kg");
-                        Console.WriteLine($"Cast Speed: {simulationEngine.Strand.CastSpeed:F2} m/min");
-                        Console.WriteLine($"Cast Length: {simulationEngine.Strand.TotalCastLength:F2} m");
-                        Console.WriteLine($"Strand Length: {simulationEngine.Strand.HeadDistanceFromMold:F2} m");
-                        Console.WriteLine($"Tail Offset: {simulationEngine.Strand.TailDistanceFromMold:F2} m");
-                        Console.WriteLine($"Next Product: {simulationEngine.NextProduct?.ProductId} length {simulationEngine.NextProduct?.LengthAim} ");
-                        Console.WriteLine($"Strand Mode: {simulationEngine.StrandMode}");
 
-                        foreach (var heat in simulationEngine.Heats)
+                        
+                        signals.Set($"{nameof(Ladle.NetWeight)}", tracking?.Caster?.Ladle?.NetWeight);
+                        signals.Set($"{nameof(Tundish.NetWeight)}", tracking?.Caster?.Tundish?.NetWeight);
+                        signals.Set($"{nameof(Strand.TotalCastLength)}", tracking?.Caster?.Strand?.TotalCastLength);
+                        signals.Set($"{nameof(Strand.CastSpeed)}", tracking?.Caster?.Strand?.CastSpeed);
+                        signals.Update();
+                        
+                        Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +
+                                          $"Heat: {tracking?.Caster?.Ladle?.Heat?.Id}, " +
+                                          $"Ladle weight: {tracking?.Caster?.Ladle?.NetWeight:F2}, " +
+                                          $"Ladle pour rate: {tracking?.Caster?.Ladle?.PouringRate:F2}, " +
+                                          $"Tundish weight: {tracking?.Caster?.Tundish?.NetWeight:F2}, " +
+                                          $"Cast speed: {tracking?.Caster?.Strand?.CastSpeed:F2}, " +
+                                          $"Cast length inc: {tracking?.Caster?.Strand?.CastLengthIncrement:F2}, " +
+                                          $"Cast length: {tracking?.Caster?.Strand?.TotalCastLength:F2}, " +
+                                          $"Measured Length: {tracking?.Caster?.Torch.MeasuredCutLength:F2} m. " +
+                                          $"Next product {tracking?.Caster?.Torch.NextProduct?.ProductId} length {tracking.Caster?.Torch?.NextProduct?.LengthAim:F2}");
+
+                        foreach (var product in tracking?.CutProducts)
                         {
-                            Console.WriteLine(
-                                $"Heat {heat.Key}: Boundary: {heat.Value.HeatBoundary:F2} m, Mix Zone: Start: {heat.Value.MixZoneStart:F2} m to End: {heat.Value.MixZoneEnd:F2} m");
+                            Console.WriteLine($"Product {product.ProductId} length {product.CutLength}");
                         }
-
-                        foreach (var product in simulationEngine.Products)
-                        {
-                            Console.WriteLine($"Product {product.ProductId} cut at length {product.LengthCut}");
-                        }
-
-                        // Clear the remaining console lines to avoid artifacts
-                        Console.WriteLine(new string(' ', Console.WindowWidth));
                     });
 
                 // Start the simulation
                 Console.WriteLine("\n=== Starting Simulation ===");
-                await simulationEngine.StartAsync();
+                await tracking.StartSequence(sequence);
                 Console.WriteLine("\n=== Simulation Completed ===");
+                foreach (var heat in tracking.Heats)
+                {
+                    Console.WriteLine(
+                        $"Heat {heat.Id}, start: {heat.HeatStartUtcTime}, end: {heat.HeatEndUtcTime}, status: {heat.Status}");
+                }
+
+                Console.WriteLine(
+                    $"Total heats {sequence.Heats.Count}, total weight {sequence.Heats.Sum(x => x.NetWeight):F2}");
+                Console.WriteLine(
+                    $"Total products: {tracking.CutProducts.Count}, total weight: {tracking.CutProducts.Sum(x => x.Weight):F2} ");
+
+                Console.ReadLine();
             }
             catch (Exception ex)
             {

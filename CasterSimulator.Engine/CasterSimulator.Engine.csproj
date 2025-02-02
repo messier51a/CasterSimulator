@@ -9,11 +9,18 @@
 
     <ItemGroup>
       <PackageReference Include="log4net" Version="3.0.3" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\CasterSimulator.Components\CasterSimulator.Components.csproj" />
       <ProjectReference Include="..\CasterSimulator.MES\CasterSimulator.MES.csproj" />
+      <ProjectReference Include="..\CasterSimulator.Streaming\CasterSimulator.Streaming.csproj" />
+      <ProjectReference Include="..\CasterSimulator.VictoriaMetrics\CasterSimulator.VictoriaMetrics.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="CastingSequence.cs" />
     </ItemGroup>
 
 </Project>
