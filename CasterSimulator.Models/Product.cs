@@ -2,6 +2,7 @@
 {
     public class Product
     {
+        public long SequenceId { get; set; }
         public int CutNumber { get; set; }
         public string ProductId { get; set; }
         public double LengthAim { get; set; }
@@ -20,8 +21,9 @@
 
         public double CastLengthStart { get; set; }
 
-        public Product(int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
+        public Product(long sequenceId,int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
         {
+            SequenceId = sequenceId;
             CutNumber = cutNumber;
             ProductId = productId ?? throw new ArgumentNullException(nameof(productId));
             LengthAim = lengthAim > 0 ? lengthAim : throw new ArgumentException("Product length must be positive.", nameof(lengthAim));

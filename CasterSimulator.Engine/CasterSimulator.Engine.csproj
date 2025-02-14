@@ -15,7 +15,8 @@
     <ItemGroup>
       <ProjectReference Include="..\CasterSimulator.Components\CasterSimulator.Components.csproj" />
       <ProjectReference Include="..\CasterSimulator.MES\CasterSimulator.MES.csproj" />
-      <ProjectReference Include="..\CasterSimulator.Streaming\CasterSimulator.Streaming.csproj" />
+      <ProjectReference Include="..\CasterSimulator.Services\CasterSimulator.Services.csproj" />
+      <ProjectReference Include="..\CasterSimulator.Utils\CasterSimulator.Utils.csproj" />
       <ProjectReference Include="..\CasterSimulator.VictoriaMetrics\CasterSimulator.VictoriaMetrics.csproj" />
     </ItemGroup>
 

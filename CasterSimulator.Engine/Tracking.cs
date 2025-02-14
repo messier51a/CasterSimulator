@@ -1,17 +1,24 @@
+using System.Collections.Concurrent;
+using CasterSimulator.Common.Collections;
 using CasterSimulator.Components;
 using CasterSimulator.Models;
+using CasterSimulator.Utils;
+using CasterSimulator.Utils.Extensions;
 
 namespace CasterSimulator.Engine;
 
 public class Tracking : IDisposable
 {
     private bool _disposed;
+
     public Caster Caster { get; private set; }
-    private Dictionary<int, Heat> _heats = new();
+
+    //private ConcurrentDictionary<int, Heat> _heats = new();
     private Sequence _sequence;
     private TaskCompletionSource<bool> _castingFinishedSignal;
-    public List<Product> CutProducts { get; private set; } = [];
-    public Heat[] Heats => _heats.Values.ToArray();
+    public ConcurrentDictionary<int,Heat> Heats => _sequence.Heats;
+    public ObservableConcurrentQueue<Product> CutProducts { get; private set; } = new();
+    public ObservableConcurrentQueue<Product> Products => _sequence.Products;
 
     private EventHandler _castingFinishedHandler;
     private EventHandler _strandAdvancedHandler;
@@ -20,6 +27,19 @@ public class Tracking : IDisposable
     private EventHandler<int> _ladleClosedHandler;
     private EventHandler _tundishWeightThresholdHandler;
     private EventHandler<int> _tundishHeatOnStrandHandler;
+    private EventHandler _tundishEmptyHandler;
+
+    public event Action? HeatStatusChanged;
+
+    public Tracking()
+    {
+        Caster = new Caster(
+            new Configuration(),
+            new Tundish("Tundish001", 6000),
+            new Mold("Mold001", 1.56, 0.103));
+
+        RegisterEvents();
+    }
 
     public async Task<long> StartSequence(Sequence sequence)
     {
@@ -27,25 +47,24 @@ public class Tracking : IDisposable
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Id, nameof(sequence.Id));
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Heats.Count, nameof(sequence.Heats));
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Products.Count, nameof(sequence.Products));
-        
+
         _sequence = sequence;
-       
+
         _castingFinishedSignal = new TaskCompletionSource<bool>();
 
-        Caster = new Caster(
-            new Configuration(),
-            new Tundish("Tundish001", 6000),
-            new Mold("Mold001", 1.56, 0.103));
-        
-        RegisterEvents();
-
         Console.WriteLine(sequence.Heats.Count);
-        
-        while (sequence.Heats.Count > 0)
+
+        while (sequence.Heats.Values.Any(heat => heat.Status == HeatStatus.New))
         {
-            var nextHeat = sequence.Heats.Dequeue();
+            var nextHeat = sequence.Heats.Values
+                .Where(heat => heat.Status == HeatStatus.New)
+                .OrderBy(heat => heat.Id)
+                .FirstOrDefault();
+
+            if (nextHeat == null)
+                break;
+
             nextHeat.Status = HeatStatus.Next;
-            _heats.Add(nextHeat.Id, nextHeat);
             var ladle = new Ladle("L001", nextHeat);
             Caster.Turret.AddLadle(ladle);
             await Caster.Turret.Rotate();
@@ -59,6 +78,32 @@ public class Tracking : IDisposable
         return sequence.Id;
     }
 
+    private void SetHeatStatus(int heatId, HeatStatus status)
+    {
+        switch (status)
+        {
+            case HeatStatus.Pouring:
+                _sequence.Heats[heatId].HeatOpenTimeUtc = DateTime.UtcNow;
+                break;
+            case HeatStatus.Closed:
+                _sequence.Heats[heatId].HeatCloseTimeUtc = DateTime.UtcNow;
+                break;
+            case HeatStatus.Casting:
+                _sequence.Heats[heatId].HeatCastingTimeUtc = DateTime.UtcNow;
+                break;
+            case HeatStatus.New:
+            case HeatStatus.Next:
+            case HeatStatus.Cutting:
+            case HeatStatus.Cast:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(status), status, null);
+        }
+        
+        _sequence.Heats[heatId].Status = status;
+        HeatStatusChanged?.Invoke();
+    }
+
     private void RegisterCasterEvents()
     {
         _castingFinishedHandler = (s, e) => { _castingFinishedSignal.TrySetResult(true); };
@@ -69,12 +114,17 @@ public class Tracking : IDisposable
     {
         _strandAdvancedHandler = (s, e) =>
         {
-            foreach (var heat in _heats.Where(heat => heat.Value.Status == HeatStatus.Cutting))
+            foreach (var heat in _sequence.Heats.Where(heat => heat.Value.HeatCastingTimeUtc > DateTime.MinValue))
+            {
+                heat.Value.HeatBoundary += Caster.Strand.CastLengthIncrement;
+            }
+
+            foreach (var heat in _sequence.Heats.Where(heat => heat.Value.Status == HeatStatus.Cutting))
             {
                 heat.Value.Status = HeatStatus.Cast;
             }
 
-            foreach (var heat in _heats.Where(heat =>
+            foreach (var heat in _sequence.Heats.Where(heat =>
                          heat.Value.Status == HeatStatus.Casting &&
                          Caster.Strand.TotalCastLength - heat.Value.CastLengthAtStartMeters >
                          Caster.Torch.TorchLocation))
@@ -91,8 +141,9 @@ public class Tracking : IDisposable
         _torchCutDoneHandler = (s, product) =>
         {
             product.Weight = product.CutLength * product.Width * product.Thickness * _sequence.SteelDensity;
-            CutProducts.Add(product.Clone());
-            var nextProduct = _sequence.Products.Dequeue();
+            CutProducts.Enqueue(product.Clone());
+            if (!_sequence.Products.TryDequeue(out var nextProduct))
+                throw new Exception($"No product available");
             Caster.Torch.SetNextProduct(nextProduct);
         };
 
@@ -103,14 +154,14 @@ public class Tracking : IDisposable
     {
         if (_ladleOpenedHandler is not null) Caster.Ladle.LadleOpened -= _ladleOpenedHandler;
         if (_ladleClosedHandler is not null) Caster.Ladle.LadleClosed -= _ladleClosedHandler;
-        
+
         _ladleOpenedHandler = (s, heatId) =>
         {
-            _heats[heatId].Open();
-            Caster.Tundish.AddHeat(_heats[heatId]);
+            SetHeatStatus(heatId, HeatStatus.Pouring);
+            Caster.Tundish.AddHeat(_sequence.Heats[heatId]);
         };
 
-        _ladleClosedHandler = (s, heatId) => { _heats[heatId].Close(); };
+        _ladleClosedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Closed); };
 
         Caster.Ladle.LadleOpened += _ladleOpenedHandler;
         Caster.Ladle.LadleClosed += _ladleClosedHandler;
@@ -118,16 +169,31 @@ public class Tracking : IDisposable
 
     private void RegisterTundishEvents()
     {
-        _tundishWeightThresholdHandler = (s, e) => { Caster.Torch.SetNextProduct(_sequence.Products.Dequeue()); };
+        _tundishWeightThresholdHandler = (s, e) =>
+        {
+            if (!_sequence.Products.TryDequeue(out var nextProduct))
+                throw new Exception($"No product available");
+            Caster.Torch.SetNextProduct(nextProduct);
+        };
 
         _tundishHeatOnStrandHandler = (s, heatId) =>
         {
-            _heats[heatId].CastLengthAtStartMeters = Caster.Strand.TotalCastLength;
-            _heats[heatId].Status = HeatStatus.Casting;
+            _sequence.Heats[heatId].CastLengthAtStartMeters = Caster.Strand.TotalCastLength;
+            SetHeatStatus(heatId, HeatStatus.Casting);
+        };
+
+        _tundishEmptyHandler = (s, e) =>
+        {
+            //optimize schedule here
+            var optimizedSchedule = CutScheduler.Optimize(
+                Caster.Strand.HeadDistanceFromMold - Caster.Torch.NextProduct.LengthAim,
+                _sequence.Products.ToList());
+            Interlocked.Exchange(ref _sequence.Products, new ObservableConcurrentQueue<Product>(optimizedSchedule));
         };
 
         Caster.Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Caster.Tundish.HeatOnStrand += _tundishHeatOnStrandHandler;
+        Caster.Tundish.Empty += _tundishEmptyHandler;
     }
 
     private void RegisterEvents()

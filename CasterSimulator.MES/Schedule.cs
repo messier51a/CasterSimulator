@@ -23,7 +23,7 @@ public static class Schedule
             var heatWeight = new Random().Next(100000, 150000);
 
             var heat = new Heat(heatId, heatName, heatWeight, _grades[new Random().Next(_grades.Length)]);
-            sequence.Heats.Enqueue(heat);
+            sequence.Heats.TryAdd(heatId, heat);
             var productAverageLength = GetRandomProductLength(5, 8);
             var totalEstimatedSlabs = CalculateNumberOfSlabs(
                 heat.NetWeight,
@@ -37,7 +37,7 @@ public static class Schedule
             {
                 var productId = sequenceId + cutCount.ToString("D2");
 
-                var product = new Product(cutCount, productId, productAverageLength,
+                var product = new Product(sequenceId, cutCount, productId, productAverageLength,
                     productAverageLength - (productAverageLength * 0.1),
                     productAverageLength + (productAverageLength * 0.1));
 
@@ -47,7 +47,7 @@ public static class Schedule
             }
 
             heatId++;
-            
+
             Thread.Sleep(100);
         }
 

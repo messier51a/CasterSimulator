@@ -19,13 +19,15 @@ public class Caster : IDisposable
     
     
     private double _previousTundishWeight;
-
+    
     public event EventHandler? CastingFinished;
 
     private EventHandler<double> _ladleSteelPouredHandler;
     private EventHandler _tundishWeightThresholdHandler;
     private EventHandler _tundishEmptyHandler;
     private EventHandler _strandAdvancedHandler;
+    private EventHandler<Product> _torchCutDoneHandler;
+    private EventHandler? _turretRotatedHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Caster"/> class, representing the continuous casting machine (CCM).
@@ -58,18 +60,31 @@ public class Caster : IDisposable
 
     private void RegisterEvents()
     {
+        RegisterTorchEvents();
         RegisterTurretEvents();
         RegisterTundishEvents();
         RegisterStrandEvent();
     }
 
+    private void RegisterTorchEvents()
+    {
+        _torchCutDoneHandler = (s, e) =>
+        {
+            Strand.HeadDistanceFromMold = Torch.TorchLocation;
+        };
+
+        Torch.CutDone += _torchCutDoneHandler;
+    }
+
     private void RegisterTurretEvents()
     {
-        Turret.Rotated += (obj, args) =>
+        _turretRotatedHandler = (s, e) =>
         {
             if (Turret.LadleInCastPosition.State != LadleState.New) return;
             RegisterLadleEvents();
+
         };
+        Turret.Rotated += _turretRotatedHandler;
     }
 
     private void RegisterLadleEvents()
@@ -81,8 +96,14 @@ public class Caster : IDisposable
 
     private void RegisterTundishEvents()
     {
-        _tundishWeightThresholdHandler = (s, e) => { Strand.Start(); };
-        _tundishEmptyHandler = (s, e) => { Strand.TailOut(); };
+        _tundishWeightThresholdHandler = (s, e) =>
+        {
+            Strand.Start();
+        };
+        _tundishEmptyHandler = (s, e) =>
+        {
+            Strand.SetMode(StrandMode.Tailout);
+        };
 
         Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Tundish.Empty += _tundishEmptyHandler;
@@ -155,6 +176,10 @@ public class Caster : IDisposable
             Tundish.Empty -= _tundishEmptyHandler;
 
             Strand.Advanced -= _strandAdvancedHandler;
+            
+            Torch.CutDone -= _torchCutDoneHandler;
+            
+            Turret.Rotated -= _turretRotatedHandler;
         }
 
         _disposed = true;

@@ -14,7 +14,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Enums", "Ca
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.VictoriaMetrics", "CasterSimulator.VictoriaMetrics\CasterSimulator.VictoriaMetrics.csproj", "{DB8D3D23-6442-4494-995F-B790AEAB4465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Streaming", "CasterSimulator.Streaming\CasterSimulator.Streaming.csproj", "{1E2674B2-D126-42BF-A336-5FE1DD6810DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Services", "CasterSimulator.Services\CasterSimulator.Services.csproj", "{1E2674B2-D126-42BF-A336-5FE1DD6810DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Utils", "CasterSimulator.Utils\CasterSimulator.Utils.csproj", "{AB7016F7-9B63-4AA3-B56D-F0F98841CB39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Common", "CasterSimulator.Common\CasterSimulator.Common.csproj", "{C4C00A0C-FF54-44AC-9B89-9599910CEB22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.WebAPI", "CasterSimulator.WebAPI\CasterSimulator.WebAPI.csproj", "{2EA7A7AB-F46E-4945-9BEC-D559A7037052}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,5 +60,17 @@ Global
 		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E2674B2-D126-42BF-A336-5FE1DD6810DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB7016F7-9B63-4AA3-B56D-F0F98841CB39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB7016F7-9B63-4AA3-B56D-F0F98841CB39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB7016F7-9B63-4AA3-B56D-F0F98841CB39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB7016F7-9B63-4AA3-B56D-F0F98841CB39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4C00A0C-FF54-44AC-9B89-9599910CEB22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4C00A0C-FF54-44AC-9B89-9599910CEB22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4C00A0C-FF54-44AC-9B89-9599910CEB22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4C00A0C-FF54-44AC-9B89-9599910CEB22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2EA7A7AB-F46E-4945-9BEC-D559A7037052}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2EA7A7AB-F46E-4945-9BEC-D559A7037052}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2EA7A7AB-F46E-4945-9BEC-D559A7037052}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2EA7A7AB-F46E-4945-9BEC-D559A7037052}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

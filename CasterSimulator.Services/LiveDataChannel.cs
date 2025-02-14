@@ -7,15 +7,19 @@ using System.Text.RegularExpressions;
 
 namespace CasterSimulator.Streaming
 {
-    public class Channel : IDisposable
+    public class LiveDataChannel : IDisposable
     {
         private readonly Dictionary<string, Signals> _signalsByArea = new();
         private readonly LiveDataSender _liveDataSender;
         private readonly IDisposable _subscription;
+        private readonly string _url;
+        private readonly string _token;
 
-        public Channel(string channelName, string url, string token)
+        public LiveDataChannel(string channelName, string url, string token)
         {
-            _liveDataSender = new LiveDataSender($"{url}/{channelName}", token);
+            _url = $"{url}/{channelName}";
+            _token = token;
+            _liveDataSender = new LiveDataSender();
 
             // Periodic auto-update every 1 second
             _subscription = Observable.Interval(TimeSpan.FromSeconds(1))
@@ -28,13 +32,32 @@ namespace CasterSimulator.Streaming
         public Signals GetSignals(string area)
         {
             if (!_signalsByArea.ContainsKey(area))
-                _signalsByArea[area] = new Signals(area, this);
+                _signalsByArea[area] = new Signals(area);
 
             return _signalsByArea[area];
         }
 
         /// <summary>
-        /// Sends all pending updates from all areas.
+        /// Sends only changed signals.
+        /// </summary>
+        public void Push()
+        {
+            foreach (var payload in _signalsByArea.Values
+                         .Select(signalArea => signalArea.GetPendingUpdates())
+                         .Where(payload => !string.IsNullOrEmpty(payload)))
+            {
+                SendUpdate(payload);
+            }
+        }
+
+        public void Push(string payload)
+        {
+            Console.WriteLine($"Push payload (url, payload): {_url},{payload}");
+            _liveDataSender.SendAsync(_url, _token, payload);
+        }
+
+        /// <summary>
+        /// Sends all pending updates from all areas in InfluxDB format.
         /// </summary>
         private void SendPendingUpdates()
         {
@@ -45,26 +68,25 @@ namespace CasterSimulator.Streaming
                 string updates = signals.GetPendingUpdates();
                 if (!string.IsNullOrEmpty(updates))
                 {
-                    combinedPayload.AppendLine($"# {signals.Area}");
-                    combinedPayload.Append(updates);
+                    combinedPayload.AppendLine(updates);
                 }
             }
 
-            string finalPayload = combinedPayload.ToString().Trim();
-            if (!string.IsNullOrEmpty(finalPayload))
+            string payload = combinedPayload.ToString().Trim();
+            if (!string.IsNullOrEmpty(payload))
             {
-                _liveDataSender.Send(finalPayload);
+                _liveDataSender.SendAsync(_url, _token, payload);
             }
         }
 
         /// <summary>
         /// Allows manual updates for a specific area.
         /// </summary>
-        internal void SendUpdate(string area, string payload)
+        internal void SendUpdate(string payload)
         {
             if (!string.IsNullOrEmpty(payload))
             {
-                _liveDataSender.Send( $"# {area}\n{payload}");
+                _liveDataSender.SendAsync(_url, _token, payload);
             }
         }
 
@@ -80,14 +102,11 @@ namespace CasterSimulator.Streaming
     public partial class Signals
     {
         public string Area { get; }
-        private readonly Channel _channel;
         private readonly Dictionary<string, object> _currentValues = new();
-        private Dictionary<string, object> _previousValues = new();
 
-        public Signals(string area, Channel channel)
+        public Signals(string area)
         {
             Area = area;
-            _channel = channel;
         }
 
         /// <summary>
@@ -95,32 +114,7 @@ namespace CasterSimulator.Streaming
         /// </summary>
         public void Set<T>(string key, T value) where T : notnull
         {
-            string formattedKey = FormatKey(key);
-            _currentValues[formattedKey] = value;
-        }
-        
-        /// <summary>
-        /// Converts CamelCase or PascalCase to lowercase_with_underscores.
-        /// </summary>
-        private string FormatKey(string key)
-        {
-            if (string.IsNullOrEmpty(key)) return key;
-
-            // Use regex to insert underscores before uppercase letters (except the first one)
-            var formatted = MyRegex().Replace(key, "$1_$2").ToLower();
-            return formatted;
-        }
-
-        /// <summary>
-        /// Sends only changed signals.
-        /// </summary>
-        public void Update()
-        {
-            var payload = GetPendingUpdates();
-            if (!string.IsNullOrEmpty(payload))
-            {
-                _channel.SendUpdate(Area, payload);
-            }
+            _currentValues[key] = value;
         }
 
         /// <summary>
@@ -128,26 +122,31 @@ namespace CasterSimulator.Streaming
         /// </summary>
         internal string GetPendingUpdates()
         {
-            var changedSignals = _currentValues
+            /*var changedSignals = _currentValues
                 .Where(kv => !_previousValues.ContainsKey(kv.Key) || !Equals(_previousValues[kv.Key], kv.Value))
-                .ToDictionary(kv => kv.Key, kv => kv.Value);
+                .ToDictionary(kv => kv.Key, kv => kv.Value);*/
 
-            if (changedSignals.Count == 0) return string.Empty;
+            //if (changedSignals.Count == 0) return string.Empty;
 
             var signalsPayload = new StringBuilder();
-            foreach (var (key, value) in changedSignals)
+            foreach (var (key, value) in _currentValues)
             {
+                if (value is null) continue;
                 var formattedValue = value switch
                 {
-                    string s => $"value=\"{s}\"",
-                    _ => $"value={value}"
+                    string s => $"\"{s}\"", // Ensure string values are enclosed in double quotes
+                    _ => value.ToString()
                 };
-                signalsPayload.AppendLine($"{key} {formattedValue}");
+
+                signalsPayload.Append($"{key}={formattedValue},");
             }
 
-            _previousValues = new Dictionary<string, object>(_currentValues); // Update history
-            return signalsPayload.ToString().Trim();
+            var formattedPayload = $"{Area} {signalsPayload.ToString().TrimEnd(',')}";
+
+            //_previousValues = new Dictionary<string, object>(_currentValues); // Update history
+            return formattedPayload;
         }
+
 
         [GeneratedRegex(@"([a-z0-9])([A-Z])")]
         private static partial Regex MyRegex();

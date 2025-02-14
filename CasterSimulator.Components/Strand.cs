@@ -1,5 +1,6 @@
 using System;
 using System.Reactive.Linq;
+using System.Reflection.Metadata;
 using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
@@ -16,11 +17,10 @@ namespace CasterSimulator.Components
         public double CastLengthIncrement { get; private set; }
         public double TotalCastLength { get; private set; }
         public double TailDistanceFromMold { get; private set; }
-        public double HeadDistanceFromMold { get; private set; }
+        public double HeadDistanceFromMold { get; set; }
         public double CastSpeed { get; private set; }
         public event EventHandler? Advanced; // Event triggered when the strand advances
         
-
         public Strand(double targetCastSpeed, double speedRampDuration = 90)
         {
             _speedControl  = new SpeedControl(0.1, targetCastSpeed, speedRampDuration);
@@ -35,9 +35,9 @@ namespace CasterSimulator.Components
                 .Subscribe(_ => AdvanceStrand());
         }
         
-        public void TailOut()
+        public void SetMode(StrandMode strandMode)
         {
-            _strandMode = StrandMode.Tailout;
+            _strandMode = strandMode;
         }
         private void AdvanceStrand()
         {

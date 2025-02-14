@@ -9,12 +9,12 @@ class Program
     {
         var sequence = Schedule.GetSquence(1.56,0.103,7850);
 
-        foreach (var heat in sequence.Heats)
+        foreach (var heat in sequence.Heats.ToArray())
         {
             Console.WriteLine($"{heat.Id}-{heat.Name}-{heat.NetWeight}");
         }
 
-        foreach (var product in sequence.Products)
+        foreach (var product in sequence.Products.ToArray())
         {
             Console.WriteLine(
                 $"{product.ProductId}-{product.CutNumber}-{product.LengthAim}-{product.LengthMin}-{product.LengthMax}");
@@ -29,58 +29,58 @@ class Program
             (127,
                 new List<Product>
                 {
-                    new Product(0, "0001", 200, 100, 300),
-                    new Product(1, "0002", 200, 100, 300)
+                    new Product(1,0, "0001", 200, 100, 300),
+                    new Product(1,1, "0002", 200, 100, 300)
                 },
                 "Not enough steel for initial schedule"
             ),
             (300,
                 new List<Product>
                 {
-                    new Product(0, "0001", 200, 100, 300),
-                    new Product(1, "0002", 200, 100, 300)
+                    new Product(1,0, "0001", 200, 100, 300),
+                    new Product(1,1, "0002", 200, 100, 300)
                 },
                 "Not enough steel for initial schedule"
             ),
             (600,
                 new List<Product>
                 {
-                    new Product(0, "0001", 200, 100, 300),
-                    new Product(1, "0002", 200, 100, 300),
-                    new Product(2, "0003", 200, 100, 300)
+                    new Product(1,0, "0001", 200, 100, 300),
+                    new Product(1,1, "0002", 200, 100, 300),
+                    new Product(1,2, "0003", 200, 100, 300)
                 },
                 "Exactly enough steel for initial schedule"
             ),
             (802,
                 new List<Product>
                 {
-                    new Product(0, "0001", 200, 100, 300),
-                    new Product(1, "0002", 200, 100, 300),
-                    new Product(2, "0003", 200, 100, 300),
-                    new Product(3, "0004", 200, 100, 300)
+                    new Product(1,0, "0001", 200, 100, 300),
+                    new Product(1,1, "0002", 200, 100, 300),
+                    new Product(1,2, "0003", 200, 100, 300),
+                    new Product(1,3, "0004", 200, 100, 300)
                 },
                 "Small excess of steel"
             ),
             (1500,
                 new List<Product>
                 {
-                    new Product(0, "0001", 200, 100, 300),
-                    new Product(1, "0002", 200, 100, 300),
-                    new Product(2, "0003", 200, 100, 300),
-                    new Product(3, "0004", 200, 100, 300),
-                    new Product(4, "0005", 200, 100, 300)
+                    new Product(1,0, "0001", 200, 100, 300),
+                    new Product(1,1, "0002", 200, 100, 300),
+                    new Product(1,2, "0003", 200, 100, 300),
+                    new Product(1,3, "0004", 200, 100, 300),
+                    new Product(1,4, "0005", 200, 100, 300)
                 },
                 "Larger excess of steel"
             ),
             (1747,
                 new List<Product>
                 {
-                    new Product(0, "0001", 200, 100, 300),
-                    new Product(1, "0002", 200, 100, 300),
-                    new Product(2, "0003", 200, 100, 300),
-                    new Product(3, "0004", 200, 100, 300),
-                    new Product(4, "0005", 200, 100, 300),
-                    new Product(5, "0006", 200, 100, 300)
+                    new Product(1,0, "0001", 200, 100, 300),
+                    new Product(1,1, "0002", 200, 100, 300),
+                    new Product(1,2, "0003", 200, 100, 300),
+                    new Product(1,3, "0004", 200, 100, 300),
+                    new Product(1,4, "0005", 200, 100, 300),
+                    new Product(1,5, "0006", 200, 100, 300)
                 },
                 "Even larger excess of steel"
             ),
@@ -97,12 +97,11 @@ class Program
             {
                 Console.WriteLine($"{product.ProductId}-{product.LengthAim}");
             }
-
-            var cutScheduleOptimizer = new CutScheduler();
+            
 
             try
             {
-                var newCutSchedule = cutScheduleOptimizer.Optimize(steelLength, cutSchedule);
+                var newCutSchedule = CutScheduler.Optimize(steelLength, cutSchedule);
 
                 Console.WriteLine("Optimized cutting schedule:");
                 foreach (var cut in newCutSchedule)

@@ -5,24 +5,22 @@ using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
 {
-    public class CutScheduler
+    public static class CutScheduler
     {
-        public event Action<object, List<Product>> ScheduleUpdated;
-
-        public List<Product> Optimize(double steelInStrand, List<Product> cutSchedule)
+        public static List<Product> Optimize(double steelInStrand, List<Product> cutSchedule)
         {
             var optimizedSchedule = cutSchedule.OrderBy(x => x.CutNumber).ToList();
             // Initialize with cutSchedule for efficiency
-            while (optimizedSchedule.Any() && steelInStrand < optimizedSchedule.Sum(x => x.LengthAim))
+            while (optimizedSchedule.Count > 0 && steelInStrand < optimizedSchedule.Sum(x => x.LengthAim))
             {
                 optimizedSchedule.RemoveAt(optimizedSchedule.Count - 1);
             }
 
-            double remainingSteel =
+            var remainingSteel =
                 steelInStrand - cutSchedule.Sum(x => x.LengthAim); // Calculate remainingSteel directly
 
             // Adjust last product's LengthAim if remainingSteel is between 0 and 4
-            if (remainingSteel > 0 && remainingSteel < 4)
+            if (remainingSteel is > 0 and < 4)
             {
                 var lastProduct = optimizedSchedule.Last();
 
@@ -59,7 +57,7 @@ namespace CasterSimulator.Components
             while (remainingSteel >= 4)
             {
                 var lastProduct = optimizedSchedule.Last();
-                var product = new Product(lastProduct.CutNumber + 1, Guid.NewGuid().ToString(), lastProduct.LengthAim,
+                var product = new Product(lastProduct.SequenceId,lastProduct.CutNumber + 1, Guid.NewGuid().ToString(), lastProduct.LengthAim,
                     lastProduct.LengthMin,
                     lastProduct.LengthMax);
 
@@ -69,7 +67,6 @@ namespace CasterSimulator.Components
                 remainingSteel -= product.LengthAim;
             }
 
-            ScheduleUpdated?.Invoke(this, optimizedSchedule);
             return optimizedSchedule;
         }
     }

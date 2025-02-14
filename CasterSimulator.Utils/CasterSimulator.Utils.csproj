@@ -7,8 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CasterSimulator.Common\CasterSimulator.Common.csproj" />
-      <ProjectReference Include="..\CasterSimulator.Enums\CasterSimulator.Enums.csproj" />
+      <ProjectReference Include="..\CasterSimulator.Models\CasterSimulator.Models.csproj" />
     </ItemGroup>
 
 </Project>

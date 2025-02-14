@@ -1,3 +1,5 @@
+using CasterSimulator.Engine;
+
 namespace CasterSimulator.Models;
 
 public class Heat
@@ -11,12 +13,13 @@ public class Heat
     public double NetWeight { get; set; } // Weight of the heat in kg
     
     public DateTime TapTime { get; set; } // Time when the heat was tapped from the furnace
-    public DateTime? HeatStartUtcTime { get; set; } // Time when the heat started casting
-    public DateTime? HeatEndUtcTime { get; set; } // Time when the heat finished casting
-    
+    public DateTime? HeatOpenTimeUtc { get; set; } = DateTime.MinValue;// Time when the heat started casting
+    public DateTime? HeatCloseTimeUtc { get; set; }  = DateTime.MinValue;// Time when the heat finished casting
+
+    public DateTime? HeatCastingTimeUtc { get; set; } = DateTime.MinValue; // Time when the heat finished casting
     public double CastLengthAtStartMeters { get; set; }
     public string GradeId { get; set; } // Identifier for the steel grade
-    public HeatStatus Status { get; set; } = HeatStatus.Next;
+    public HeatStatus Status { get; set; } = HeatStatus.New;
     public double MixZoneStart { get; set; }
     public double MixZoneEnd { get; set; }
     public double HeatBoundary { get; set; }
@@ -32,12 +35,3 @@ public class Heat
     }
 }
 
-public enum HeatStatus
-{
-    Next = 1,
-    Pouring,
-    Closed,
-    Casting,
-    Cutting,
-    Cast
-}

@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using CasterSimulator.Common.Collections;
+
 namespace CasterSimulator.Models;
 
 public class Sequence
@@ -11,8 +14,8 @@ public class Sequence
     }
 
     public long Id { get;}
-    public Queue<Heat> Heats = new();
-    public Queue<Product> Products = new();
+    public ConcurrentDictionary<int,Heat> Heats = new();
+    public ObservableConcurrentQueue<Product> Products = new();
     public double Width { get; }
     public double Thickness { get; }
 
