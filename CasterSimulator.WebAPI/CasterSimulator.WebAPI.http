@@ -1,0 +1,6 @@
+@CasterSimulator.WebAPI_HostAddress = http://localhost:5087
+
+GET {{CasterSimulator.WebAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

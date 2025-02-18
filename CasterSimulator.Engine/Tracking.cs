@@ -16,7 +16,7 @@ public class Tracking : IDisposable
     //private ConcurrentDictionary<int, Heat> _heats = new();
     private Sequence _sequence;
     private TaskCompletionSource<bool> _castingFinishedSignal;
-    public ConcurrentDictionary<int,Heat> Heats => _sequence.Heats;
+    public ConcurrentDictionary<int, Heat> Heats => _sequence.Heats;
     public ObservableConcurrentQueue<Product> CutProducts { get; private set; } = new();
     public ObservableConcurrentQueue<Product> Products => _sequence.Products;
 
@@ -26,7 +26,7 @@ public class Tracking : IDisposable
     private EventHandler<int> _ladleOpenedHandler;
     private EventHandler<int> _ladleClosedHandler;
     private EventHandler _tundishWeightThresholdHandler;
-    private EventHandler<int> _tundishHeatOnStrandHandler;
+    private EventHandler<int> _tundishHeatOut;
     private EventHandler _tundishEmptyHandler;
 
     public event Action? HeatStatusChanged;
@@ -36,7 +36,7 @@ public class Tracking : IDisposable
         Caster = new Caster(
             new Configuration(),
             new Tundish("Tundish001", 6000),
-            new Mold("Mold001", 1.56, 0.103));
+            new Mold("Mold001", 1.56, 0.103, 0.9));
 
         RegisterEvents();
     }
@@ -99,7 +99,7 @@ public class Tracking : IDisposable
             default:
                 throw new ArgumentOutOfRangeException(nameof(status), status, null);
         }
-        
+
         _sequence.Heats[heatId].Status = status;
         HeatStatusChanged?.Invoke();
     }
@@ -158,7 +158,7 @@ public class Tracking : IDisposable
         _ladleOpenedHandler = (s, heatId) =>
         {
             SetHeatStatus(heatId, HeatStatus.Pouring);
-            Caster.Tundish.AddHeat(_sequence.Heats[heatId]);
+            Caster.Tundish.AddHeat(heatId);
         };
 
         _ladleClosedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Closed); };
@@ -176,7 +176,7 @@ public class Tracking : IDisposable
             Caster.Torch.SetNextProduct(nextProduct);
         };
 
-        _tundishHeatOnStrandHandler = (s, heatId) =>
+        _tundishHeatOut = (s, heatId) =>
         {
             _sequence.Heats[heatId].CastLengthAtStartMeters = Caster.Strand.TotalCastLength;
             SetHeatStatus(heatId, HeatStatus.Casting);
@@ -192,7 +192,7 @@ public class Tracking : IDisposable
         };
 
         Caster.Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
-        Caster.Tundish.HeatOnStrand += _tundishHeatOnStrandHandler;
+        Caster.Tundish.HeatOut += _tundishHeatOut;
         Caster.Tundish.Empty += _tundishEmptyHandler;
     }
 
@@ -212,7 +212,7 @@ public class Tracking : IDisposable
         Caster.Ladle.LadleOpened -= _ladleOpenedHandler;
         Caster.Ladle.LadleClosed -= _ladleClosedHandler;
         Caster.Tundish.WeightThresholdReached -= _tundishWeightThresholdHandler;
-        Caster.Tundish.HeatOnStrand -= _tundishHeatOnStrandHandler;
+        Caster.Tundish.HeatOut -= _tundishHeatOut;
     }
 
     public void Dispose()

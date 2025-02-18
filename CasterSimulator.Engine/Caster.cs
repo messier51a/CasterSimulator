@@ -28,6 +28,8 @@ public class Caster : IDisposable
     private EventHandler _strandAdvancedHandler;
     private EventHandler<Product> _torchCutDoneHandler;
     private EventHandler? _turretRotatedHandler;
+    private EventHandler? _moldWeightThresholdHandler;
+    private EventHandler? _moldEmptyHandler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Caster"/> class, representing the continuous casting machine (CCM).
@@ -94,6 +96,21 @@ public class Caster : IDisposable
         Ladle.SteelPoured += _ladleSteelPouredHandler;
     }
 
+    private void RegisterMoldEvents()
+    {
+        _moldWeightThresholdHandler = (s, e) =>
+        {
+            Strand.Start();
+        };
+        _moldEmptyHandler = (s, e) =>
+        {
+            Strand.SetMode(StrandMode.Tailout);
+        };
+
+        Mold.WeightThresholdReached += _moldWeightThresholdHandler;
+        Mold.Empty += _moldEmptyHandler;
+    }
+
     private void RegisterTundishEvents()
     {
         _tundishWeightThresholdHandler = (s, e) =>
@@ -116,7 +133,7 @@ public class Caster : IDisposable
 
             if (Strand.Mode != StrandMode.Tailout)
             {
-                var crossSectionalArea = Mold.GetCrossSectionalArea(); // m²
+                var crossSectionalArea = Mold.CrossSectionalArea; // m²
                 var massFlow = crossSectionalArea * Strand.CastLengthIncrement * _configuration.SteelDensity; // kg
                 Tundish.RemoveSteel(massFlow);
             }
