@@ -77,17 +77,20 @@ namespace CasterSimulator.Components
         /// <summary>
         /// Adds a new heat to the container.
         /// </summary>
-        public void AddHeat(int id)
+        /*public void AddHeat(int id)
         {
             if (_heats.Count >= 2) throw new InvalidOperationException("Too many heats in container.");
             _heats.Enqueue(new HeatMin(id, 0));
-        }
+        }*/
 
         /// <summary>
         /// Adds steel to the container and starts pouring if the threshold is reached (when AutoPour is enabled).
         /// </summary>
-        public void AddSteel(double weight)
+        public void AddSteel(int heatId, double weight)
         {
+            if (_heats.All(x=>x.Id != heatId))
+                _heats.Enqueue(new HeatMin(heatId, weight));
+            
             if (!_heats.TryPeek(out var currentHeat))
                 throw new InvalidOperationException("No heats in container.");
 

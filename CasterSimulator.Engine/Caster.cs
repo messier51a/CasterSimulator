@@ -16,10 +16,10 @@ public class Caster : IDisposable
     public Strand Strand { get; private set; }
     public Torch Torch { get; private set; }
     public Ladle Ladle => Turret.LadleInCastPosition;
-    
-    
+
+
     private double _previousTundishWeight;
-    
+
     public event EventHandler? CastingFinished;
 
     private EventHandler<double> _ladleSteelPouredHandler;
@@ -70,10 +70,7 @@ public class Caster : IDisposable
 
     private void RegisterTorchEvents()
     {
-        _torchCutDoneHandler = (s, e) =>
-        {
-            Strand.HeadDistanceFromMold = Torch.TorchLocation;
-        };
+        _torchCutDoneHandler = (s, e) => { Strand.HeadDistanceFromMold = Torch.TorchLocation; };
 
         Torch.CutDone += _torchCutDoneHandler;
     }
@@ -84,7 +81,6 @@ public class Caster : IDisposable
         {
             if (Turret.LadleInCastPosition.State != LadleState.New) return;
             RegisterLadleEvents();
-
         };
         Turret.Rotated += _turretRotatedHandler;
     }
@@ -92,20 +88,14 @@ public class Caster : IDisposable
     private void RegisterLadleEvents()
     {
         if (_ladleSteelPouredHandler is not null) Ladle.SteelPoured -= _ladleSteelPouredHandler;
-        _ladleSteelPouredHandler = (s, pouredSteel) => { Tundish.AddSteel(pouredSteel); };
+        _ladleSteelPouredHandler = (s, pouredSteel) => { Tundish.AddSteel(Ladle.Heat.Id, pouredSteel); };
         Ladle.SteelPoured += _ladleSteelPouredHandler;
     }
 
     private void RegisterMoldEvents()
     {
-        _moldWeightThresholdHandler = (s, e) =>
-        {
-            Strand.Start();
-        };
-        _moldEmptyHandler = (s, e) =>
-        {
-            Strand.SetMode(StrandMode.Tailout);
-        };
+        _moldWeightThresholdHandler = (s, e) => { Strand.Start(); };
+        _moldEmptyHandler = (s, e) => { Strand.SetMode(StrandMode.Tailout); };
 
         Mold.WeightThresholdReached += _moldWeightThresholdHandler;
         Mold.Empty += _moldEmptyHandler;
@@ -113,14 +103,8 @@ public class Caster : IDisposable
 
     private void RegisterTundishEvents()
     {
-        _tundishWeightThresholdHandler = (s, e) =>
-        {
-            Strand.Start();
-        };
-        _tundishEmptyHandler = (s, e) =>
-        {
-            Strand.SetMode(StrandMode.Tailout);
-        };
+        _tundishWeightThresholdHandler = (s, e) => { Strand.Start(); };
+        _tundishEmptyHandler = (s, e) => { Strand.SetMode(StrandMode.Tailout); };
 
         Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Tundish.Empty += _tundishEmptyHandler;
@@ -130,7 +114,6 @@ public class Caster : IDisposable
     {
         _strandAdvancedHandler = (s, e) =>
         {
-
             if (Strand.Mode != StrandMode.Tailout)
             {
                 var crossSectionalArea = Mold.CrossSectionalArea; // m²
@@ -164,7 +147,9 @@ public class Caster : IDisposable
         }
 
         // Adjust pouring rate dynamically based on weight error
-        double adjustment = -weightError * _configuration.TundishWeightCorrectionFactor; // Negative means reducing pouring if overweight
+        double adjustment =
+            -weightError *
+            _configuration.TundishWeightCorrectionFactor; // Negative means reducing pouring if overweight
         double newRate = _configuration.SteadyStateRate + adjustment;
 
         // Ensure rate stays within limits
@@ -172,6 +157,7 @@ public class Caster : IDisposable
 
         Ladle.SetPouringRate(newRate);
     }
+
     public void Dispose()
     {
         Dispose(true); // Explicit disposal
@@ -193,9 +179,9 @@ public class Caster : IDisposable
             Tundish.Empty -= _tundishEmptyHandler;
 
             Strand.Advanced -= _strandAdvancedHandler;
-            
+
             Torch.CutDone -= _torchCutDoneHandler;
-            
+
             Turret.Rotated -= _turretRotatedHandler;
         }
 

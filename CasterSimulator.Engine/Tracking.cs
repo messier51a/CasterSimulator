@@ -158,7 +158,6 @@ public class Tracking : IDisposable
         _ladleOpenedHandler = (s, heatId) =>
         {
             SetHeatStatus(heatId, HeatStatus.Pouring);
-            Caster.Tundish.AddHeat(heatId);
         };
 
         _ladleClosedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Closed); };
