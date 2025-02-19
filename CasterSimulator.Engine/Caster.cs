@@ -24,6 +24,7 @@ public class Caster : IDisposable
 
     private EventHandler<double> _ladleSteelPouredHandler;
     private EventHandler _tundishWeightThresholdHandler;
+    private EventHandler<HeatMin> _tundishSteelPouredHandler;
     private EventHandler _tundishEmptyHandler;
     private EventHandler _strandAdvancedHandler;
     private EventHandler<Product> _torchCutDoneHandler;
@@ -40,16 +41,13 @@ public class Caster : IDisposable
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="configuration"/>, <paramref name="tundish"/>, or <paramref name="mold"/> is null.
     /// </exception>
-    public Caster(Configuration configuration, Tundish tundish, Mold mold)
+    public Caster(Configuration configuration)
     {
         ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentNullException.ThrowIfNull(tundish);
-        ArgumentNullException.ThrowIfNull(mold);
-
         _configuration = configuration;
         Turret = new Turret();
-        Tundish = tundish;
-        Mold = mold;
+        Tundish = new Tundish("Tundish001", 6000);
+        Mold =  new Mold("Mold001", 1.56, 0.103, 0.9); 
         Strand = new Strand(_configuration.TargetCastSpeed, _configuration.SpeedRampDuration);
         Torch = new Torch(_configuration.TorchLocation);
 
@@ -65,6 +63,7 @@ public class Caster : IDisposable
         RegisterTorchEvents();
         RegisterTurretEvents();
         RegisterTundishEvents();
+        RegisterMoldEvents();
         RegisterStrandEvent();
     }
 
@@ -92,6 +91,17 @@ public class Caster : IDisposable
         Ladle.SteelPoured += _ladleSteelPouredHandler;
     }
 
+    private void RegisterTundishEvents()
+    {
+        _tundishSteelPouredHandler = (s, heat) => { Mold.AddSteel(heat.Id, heat.Weight); };
+        _tundishWeightThresholdHandler = (s, e) => { Strand.Start(); };
+        _tundishEmptyHandler = (s, e) => { Strand.SetMode(StrandMode.Tailout); };
+
+        Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
+        Tundish.SteelPoured+= _tundishSteelPouredHandler;
+        Tundish.Empty += _tundishEmptyHandler;
+    }
+    
     private void RegisterMoldEvents()
     {
         _moldWeightThresholdHandler = (s, e) => { Strand.Start(); };
@@ -99,15 +109,6 @@ public class Caster : IDisposable
 
         Mold.WeightThresholdReached += _moldWeightThresholdHandler;
         Mold.Empty += _moldEmptyHandler;
-    }
-
-    private void RegisterTundishEvents()
-    {
-        _tundishWeightThresholdHandler = (s, e) => { Strand.Start(); };
-        _tundishEmptyHandler = (s, e) => { Strand.SetMode(StrandMode.Tailout); };
-
-        Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
-        Tundish.Empty += _tundishEmptyHandler;
     }
 
     private void RegisterStrandEvent()
@@ -118,7 +119,7 @@ public class Caster : IDisposable
             {
                 var crossSectionalArea = Mold.CrossSectionalArea; // m²
                 var massFlow = crossSectionalArea * Strand.CastLengthIncrement * _configuration.SteelDensity; // kg
-                Tundish.RemoveSteel(massFlow);
+                Mold.RemoveSteel(massFlow);
             }
 
             Torch.Measure(Strand.CastLengthIncrement);
@@ -177,6 +178,12 @@ public class Caster : IDisposable
             Tundish.WeightThresholdReached -= _tundishWeightThresholdHandler;
 
             Tundish.Empty -= _tundishEmptyHandler;
+            
+            Tundish.SteelPoured -= _tundishSteelPouredHandler;
+            
+            Mold.WeightThresholdReached -= _moldWeightThresholdHandler;
+            
+            Mold.Empty -= _moldEmptyHandler;
 
             Strand.Advanced -= _strandAdvancedHandler;
 

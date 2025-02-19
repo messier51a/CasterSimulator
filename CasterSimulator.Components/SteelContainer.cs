@@ -55,7 +55,8 @@ namespace CasterSimulator.Components
         /// </summary>
         public double NetWeight => _heats.Sum(x => x.Weight);
 
-        public HeatMin[] Heats => _heats.ToArray();
+        public HeatMin CurrentHeat => _heats.TryPeek(out var heat) ? heat : null;
+        
 
         /// <summary>
         /// Gets the cross-sectional area of the container in square meters.
@@ -73,15 +74,6 @@ namespace CasterSimulator.Components
             _containerDetails = details;
             FlowRate = details.InitialFlowRate;
         }
-
-        /// <summary>
-        /// Adds a new heat to the container.
-        /// </summary>
-        /*public void AddHeat(int id)
-        {
-            if (_heats.Count >= 2) throw new InvalidOperationException("Too many heats in container.");
-            _heats.Enqueue(new HeatMin(id, 0));
-        }*/
 
         /// <summary>
         /// Adds steel to the container and starts pouring if the threshold is reached (when AutoPour is enabled).
@@ -120,7 +112,7 @@ namespace CasterSimulator.Components
 
         private void PourSteel()
         {
-            if (!_containerDetails.AutoPour || NetWeight <= 0)
+            if (NetWeight <= 0)
             {
                 StopPouring();
                 return;

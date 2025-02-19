@@ -18,7 +18,7 @@ namespace CasterSimulator.Components
         /// <param name="autoPour">Determines whether the tundish automatically pours when the threshold is reached.</param>
         /// <param name="flowRate">Steel pouring rate in kilograms per second.</param>
         public Tundish(string id, double thresholdWeight)
-            : base(new ContainerDetails(id, false)
+            : base(new ContainerDetails(id, true)
             {
                 Width = 3,
                 Depth = 1.5,

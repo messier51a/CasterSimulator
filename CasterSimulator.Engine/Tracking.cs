@@ -33,11 +33,7 @@ public class Tracking : IDisposable
 
     public Tracking()
     {
-        Caster = new Caster(
-            new Configuration(),
-            new Tundish("Tundish001", 6000),
-            new Mold("Mold001", 1.56, 0.103, 0.9));
-
+        Caster = new Caster(new Configuration());
         RegisterEvents();
     }
 
@@ -155,10 +151,7 @@ public class Tracking : IDisposable
         if (_ladleOpenedHandler is not null) Caster.Ladle.LadleOpened -= _ladleOpenedHandler;
         if (_ladleClosedHandler is not null) Caster.Ladle.LadleClosed -= _ladleClosedHandler;
 
-        _ladleOpenedHandler = (s, heatId) =>
-        {
-            SetHeatStatus(heatId, HeatStatus.Pouring);
-        };
+        _ladleOpenedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Pouring); };
 
         _ladleClosedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Closed); };
 
