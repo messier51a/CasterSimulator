@@ -23,7 +23,7 @@ public class Mold : SteelContainer
             Depth = depth,
             Height = height,
             MaxLevel = thresholdLevel,
-            ThresholdWeight = thresholdLevel * width * depth * 7850, // Steel density assumption
+            ThresholdLevelMm = 800,
             InitialFlowRate = 0
         })
     {

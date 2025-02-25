@@ -21,8 +21,17 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
     public event EventHandler<int>? ContainerEmptied;
     public event EventHandler? WeightThresholdReached;
     public event EventHandler<int>? HeatOut;
-    public double FlowRate { get; private set; } 
-    public double NetWeight => _heats.Sum(h => h.Weight);
+    public double FlowRateKgSec { get; private set; } 
+    public double NetWeightKgs => _heats.Sum(h => h.Weight);
+    public string Id => ContainerDetails.Id;
+    public double MaxFlowRateKgSec => ContainerDetails.MaxFlowRateKgSec;
+    public double LevelMm {
+        get
+        {
+            var volume = NetWeightKgs / ContainerDetails.SteelDensity;
+            return (volume / (CrossSectionalArea)) * 1_000;
+        }
+    }
     public double CrossSectionalArea => ContainerDetails.Width * ContainerDetails.Depth;
     public int HeatId => _heats.FirstOrDefault()?.Id ?? 0;
     
@@ -36,7 +45,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
                 _heats.First(x => x.Id == heatId).Weight += weight;
         }
 
-        if (!_thresholdReached && NetWeight >= ContainerDetails.ThresholdWeight)
+        if (!_thresholdReached && LevelMm >= ContainerDetails.ThresholdLevelMm)
         {
             _thresholdReached = true;
             WeightThresholdReached?.Invoke(this, EventArgs.Empty);
@@ -46,12 +55,12 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
     public async Task PourAsync()
     {
        
-        FlowRate = ContainerDetails.InitialFlowRate;
+        FlowRateKgSec = ContainerDetails.InitialFlowRate;
         _pouringCompletionSource = new TaskCompletionSource<bool>();
 
-        while (NetWeight > 0)
+        while (NetWeightKgs > 0)
         {
-            RemoveSteel(FlowRate);
+            RemoveSteel(FlowRateKgSec);
             await Task.Delay(1000);
         }
 
@@ -61,7 +70,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
     public void RemoveSteel(double weight)
     {
         var lastHeatId = 0;
-        FlowRate = weight;
+        FlowRateKgSec = weight;
         
         while (weight > 0 && _heats.TryPeek(out var frontHeat))
         {
@@ -88,7 +97,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
             }
         }
 
-        if (NetWeight == 0)
+        if (NetWeightKgs == 0)
         {
             ContainerEmptied?.Invoke(this, lastHeatId);
         }
@@ -96,15 +105,9 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
 
     public virtual void SetFlowRate(double flowRate)
     {
-        FlowRate = flowRate;
+        FlowRateKgSec = flowRate;
     }
-
-    public double GetLevel()
-    {
-        var volume = NetWeight / ContainerDetails.SteelDensity;
-        return (volume / (CrossSectionalArea)) * 1_000;
-    }
-
+    
     public void Dispose()
     {
         if (_disposed) return;

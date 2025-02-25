@@ -7,9 +7,8 @@ namespace CasterSimulator.Components
     /// </summary>
     public class Tundish : SteelContainer
     {
+        public double StopperRodPositionPercent => Math.Clamp((FlowRateKgSec / ContainerDetails.MaxFlowRateKgSec) * 100.0, 0, 100);
 
-        public double MaxFlowRate => ContainerDetails.MaxFlowRate;
-        public double StopperRodPosition => Math.Clamp((FlowRate / ContainerDetails.MaxFlowRate) * 100.0, 0, 100);
         /// <summary>
         /// Initializes a new instance of the <see cref="Tundish"/> class.
         /// </summary>
@@ -20,15 +19,15 @@ namespace CasterSimulator.Components
         /// <param name="thresholdLevel">Weight at which pouring starts, in kilograms.</param>
         /// <param name="autoPour">Determines whether the tundish automatically pours when the threshold is reached.</param>
         /// <param name="flowRate">Steel pouring rate in kilograms per second.</param>
-        public Tundish(string id, double maxFlowRate, double thresholdLevel)
+        public Tundish(string id, double thresholdLevel)
             : base(new ContainerDetails(id)
             {
                 Width = 3.876,
                 Depth = 1.550,
                 MaxLevel = 1.181,
-                ThresholdWeight = thresholdLevel * 3.876 * 1.550 * 7850, // Steel density assumption
+                ThresholdLevelMm = 127,
                 InitialFlowRate = 30,
-                MaxFlowRate = maxFlowRate,
+                MaxFlowRateKgSec = 150,
             })
         {
         }

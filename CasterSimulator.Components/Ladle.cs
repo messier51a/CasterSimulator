@@ -8,12 +8,8 @@ public class Ladle : SteelContainer
     private readonly Random _random = new Random();
     private bool _isClogged = false;
     private int _clogDuration = 0;
-
     public LadleState State { get; private set; } = LadleState.New;
-
-    public double MaxFlowRate => ContainerDetails.MaxFlowRate;
-    public string Id => ContainerDetails.Id;
-
+    
     public Ladle(string id)
         : base(new ContainerDetails(id)
         {
@@ -21,9 +17,9 @@ public class Ladle : SteelContainer
             Depth = 0,
             Height = 0,
             MaxLevel = 0,
-            ThresholdWeight = 0,
+            ThresholdLevelMm = 0,
             InitialFlowRate = 300,
-            MaxFlowRate = 300,
+            MaxFlowRateKgSec = 300,
         })
     {
     }

@@ -12,10 +12,9 @@ public class ContainerDetails
     public double Depth { get; set; }
     public double Height { get; set; }
     public double MaxLevel { get; set; }
-    public double ThresholdWeight { get; set; }
+    public double ThresholdLevelMm { get; set; }
     public double InitialFlowRate { get; set; }
-    
-    public double MaxFlowRate { get; set; }
+    public double MaxFlowRateKgSec { get; set; }
     public double SteelDensity { get; set; } = 7850;
     
 }

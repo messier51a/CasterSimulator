@@ -55,21 +55,21 @@ namespace CasterSimulator
                 using var periodicLogger = Observable.Interval(TimeSpan.FromMilliseconds(1000))
                     .Subscribe(async _ =>
                     {
-                        overviewSignals.Set("ladle_weight", tracking?.Caster?.Ladle?.NetWeight);
-                        overviewSignals.Set("ladle_flow", tracking?.Caster?.Ladle?.FlowRate);
-                        overviewSignals.Set("tundish_weight", tracking?.Caster?.Tundish?.NetWeight);
-                        overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.GetLevel());
-                        overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRate);
-                        overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPosition);
-                        overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.GetLevel());
-                        overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRate);
-                        overviewSignals.Set("total_cast_length", tracking?.Caster?.Strand?.TotalCastLength);
-                        overviewSignals.Set("cast_speed", tracking?.Caster?.Strand?.CastSpeed);
+                        overviewSignals.Set("ladle_weight", tracking?.Caster?.Ladle?.NetWeightKgs);
+                        overviewSignals.Set("ladle_flow", tracking?.Caster?.Ladle?.FlowRateKgSec);
+                        overviewSignals.Set("tundish_weight", tracking?.Caster?.Tundish?.NetWeightKgs);
+                        overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.LevelMm);
+                        overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRateKgSec);
+                        overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPositionPercent);
+                        overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.LevelMm);
+                        overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRateKgSec);
+                        overviewSignals.Set("total_cast_length", tracking?.Caster?.Strand?.TotalCastLengthMeters);
+                        overviewSignals.Set("cast_speed", tracking?.Caster?.Strand?.CastSpeedMetersMin);
                         overviewSignals.Set("heat_id", tracking?.Caster?.Ladle?.HeatId);
                         overviewSignals.Set("next_cut_id", tracking?.Caster?.Torch.NextProduct?.ProductId);
-                        overviewSignals.Set("next_cut_length", tracking?.Caster?.Torch.NextProduct?.LengthAim);
-                        overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasuredCutLength);
-                        overviewSignals.Set("head_position", tracking?.Caster?.Strand.HeadDistanceFromMold);
+                        overviewSignals.Set("next_cut_length", tracking?.Caster?.Torch.NextProduct?.LengthAimMeters);
+                        overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasCutLengthMeters);
+                        overviewSignals.Set("head_position", tracking?.Caster?.Strand?.HeadFromMoldMeters);
 
                         var heats = tracking.Heats.Values.ToArray();
                         
@@ -86,14 +86,14 @@ namespace CasterSimulator
 
                         Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +
                                           $"Heat: {tracking?.Caster?.Ladle?.HeatId}, " +
-                                          $"Ladle weight: {tracking?.Caster?.Ladle?.NetWeight:F2}, " +
-                                          $"Ladle pour rate: {tracking?.Caster?.Ladle?.FlowRate:F2}, " +
-                                          $"Tundish weight: {tracking?.Caster?.Tundish?.NetWeight:F2}, " +
-                                          $"Cast speed: {tracking?.Caster?.Strand?.CastSpeed:F2}, " +
+                                          $"Ladle weight: {tracking?.Caster?.Ladle?.NetWeightKgs:F2}, " +
+                                          $"Ladle pour rate: {tracking?.Caster?.Ladle?.FlowRateKgSec:F2}, " +
+                                          $"Tundish weight: {tracking?.Caster?.Tundish?.NetWeightKgs:F2}, " +
+                                          $"Cast speed: {tracking?.Caster?.Strand?.CastSpeedMetersMin:F2}, " +
                                           $"Cast length inc: {tracking?.Caster?.Strand?.CastLengthIncrement:F2}, " +
-                                          $"Cast length: {tracking?.Caster?.Strand?.TotalCastLength:F2}, " +
-                                          $"Measured Length: {tracking?.Caster?.Torch.MeasuredCutLength:F2} m. " +
-                                          $"Next product {tracking?.Caster?.Torch.NextProduct?.ProductId} length {tracking.Caster?.Torch?.NextProduct?.LengthAim:F2}");
+                                          $"Cast length: {tracking?.Caster?.Strand?.TotalCastLengthMeters:F2}, " +
+                                          $"Measured Length: {tracking?.Caster?.Torch.MeasCutLengthMeters:F2} m. " +
+                                          $"Next product {tracking?.Caster?.Torch.NextProduct?.ProductId} length {tracking.Caster?.Torch?.NextProduct?.LengthAimMeters:F2}");
 
                         foreach (var product in tracking?.CutProducts.ToArray())
                         {

@@ -33,10 +33,6 @@ public class Caster : IDisposable
     private EventHandler? _moldWeightThresholdHandler;
     private EventHandler<int>? _moldEmptyHandler;
 
-    private readonly FlowController _ladleFlowController;
-    private readonly FlowController _tundishFlowController;
-
-
     /// <summary>
     /// Initializes a new instance of the <see cref="Caster"/> class, representing the continuous casting machine (CCM).
     /// </summary>
@@ -51,19 +47,12 @@ public class Caster : IDisposable
         ArgumentNullException.ThrowIfNull(configuration);
         _configuration = configuration;
         Turret = new Turret();
-        Tundish = new Tundish("Tundish001", 130, 0.127);
+        Tundish = new Tundish("Tundish001", 0.127);
         Mold = new Mold("Mold001", 1.56, 0.103, 1.0, 0.8);
         Strand = new Strand(_configuration.TargetCastSpeed, _configuration.SpeedRampDuration);
         Torch = new Torch(_configuration.TorchLocation);
-
-        _tundishFlowController = new FlowController(820, 5, Tundish.MaxFlowRate);
-        _ladleFlowController = new FlowController(432, 5, 300);
-
+        
         RegisterEvents();
-
-        /*_ladleFlowRateSubscription = Observable.Interval(TimeSpan.FromSeconds(1))
-            .Where(_ => Turret.LadleInCastPosition?.State == LadleState.Open)
-            .Subscribe(_ => { AdjustLadleFlowRate(); });*/
     }
 
     private void RegisterEvents()
@@ -168,7 +157,7 @@ public class Caster : IDisposable
 
     private void RegisterTorchEvents()
     {
-        _torchCutDoneHandler = (s, e) => { Strand.HeadDistanceFromMold = Torch.TorchLocation; };
+        _torchCutDoneHandler = (s, e) => { Strand.HeadFromMoldMeters = Torch.TorchLocation; };
 
         Torch.CutDone += _torchCutDoneHandler;
     }
@@ -177,12 +166,12 @@ public class Caster : IDisposable
     {
         Console.WriteLine("Tundish threshold reached, starting flow rate adjustment...");
         _tundishFlowRateSubscription = Observable.Interval(TimeSpan.FromSeconds(1))
-            .TakeWhile(_ => Tundish.NetWeight > 0)
+            .TakeWhile(_ => Tundish.NetWeightKgs > 0)
             .Subscribe(_ =>
             {
                 //var moldLevel = Mold.GetLevel();
                 //var newFlowRate = _moldLevelController.AdjustFlowRate(moldLevel, Tundish.FlowRate);
-                var newFlowRate = _tundishFlowController.ComputeFlowRate(Mold.GetLevel(), Tundish.FlowRate, 825, 5);
+                var newFlowRate = FlowController.ComputeFlowRate(Mold.LevelMm, Tundish.FlowRateKgSec, Tundish.MaxFlowRateKgSec,825, 5);
                 Tundish.SetFlowRate(newFlowRate);
             });
     }
@@ -190,10 +179,10 @@ public class Caster : IDisposable
     private void AdjustLadleFlowRate()
     {
         _ladleFlowRateSubscription = Observable.Interval(TimeSpan.FromSeconds(1))
-            .TakeWhile(_ => Ladle.NetWeight > 0)
+            .TakeWhile(_ => Ladle.NetWeightKgs > 0)
             .Subscribe(_ =>
             {
-                var newFlowRate = _ladleFlowController.ComputeFlowRate(Tundish.GetLevel(), Ladle.FlowRate, 453, 10);
+                var newFlowRate = FlowController.ComputeFlowRate(Tundish.LevelMm, Ladle.FlowRateKgSec, Ladle.MaxFlowRateKgSec,453, 10);
                 Ladle.SetFlowRate(newFlowRate);
             });
     }

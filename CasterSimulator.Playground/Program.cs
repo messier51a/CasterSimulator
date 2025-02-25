@@ -17,7 +17,7 @@ class Program
         foreach (var product in sequence.Products.ToArray())
         {
             Console.WriteLine(
-                $"{product.ProductId}-{product.CutNumber}-{product.LengthAim}-{product.LengthMin}-{product.LengthMax}");
+                $"{product.ProductId}-{product.CutNumber}-{product.LengthAimMeters}-{product.LengthMin}-{product.LengthMax}");
         }
         
         Console.ReadKey();
@@ -95,7 +95,7 @@ class Program
             Console.WriteLine("Cut Schedule:");
             foreach (var product in cutSchedule)
             {
-                Console.WriteLine($"{product.ProductId}-{product.LengthAim}");
+                Console.WriteLine($"{product.ProductId}-{product.LengthAimMeters}");
             }
             
 
@@ -106,10 +106,10 @@ class Program
                 Console.WriteLine("Optimized cutting schedule:");
                 foreach (var cut in newCutSchedule)
                 {
-                    Console.WriteLine($"{cut.ProductId}-{cut.LengthAim}");
+                    Console.WriteLine($"{cut.ProductId}-{cut.LengthAimMeters}");
                 }
 
-                Console.WriteLine($"Remaining length: {steelLength - newCutSchedule.Sum(x => x.LengthAim)}");
+                Console.WriteLine($"Remaining length: {steelLength - newCutSchedule.Sum(x => x.LengthAimMeters)}");
             }
             catch (ArgumentException ex)
             {

@@ -11,13 +11,13 @@ namespace CasterSimulator.Components
         {
             var optimizedSchedule = cutSchedule.OrderBy(x => x.CutNumber).ToList();
             // Initialize with cutSchedule for efficiency
-            while (optimizedSchedule.Count > 0 && steelInStrand < optimizedSchedule.Sum(x => x.LengthAim))
+            while (optimizedSchedule.Count > 0 && steelInStrand < optimizedSchedule.Sum(x => x.LengthAimMeters))
             {
                 optimizedSchedule.RemoveAt(optimizedSchedule.Count - 1);
             }
 
             var remainingSteel =
-                steelInStrand - cutSchedule.Sum(x => x.LengthAim); // Calculate remainingSteel directly
+                steelInStrand - cutSchedule.Sum(x => x.LengthAimMeters); // Calculate remainingSteel directly
 
             // Adjust last product's LengthAim if remainingSteel is between 0 and 4
             if (remainingSteel is > 0 and < 4)
@@ -25,11 +25,11 @@ namespace CasterSimulator.Components
                 var lastProduct = optimizedSchedule.Last();
 
                 // Check if we can add all remainingSteel to LengthAim while staying under LengthMax
-                double possibleIncrease = lastProduct.LengthMax - lastProduct.LengthAim;
+                double possibleIncrease = lastProduct.LengthMax - lastProduct.LengthAimMeters;
                 if (remainingSteel <= possibleIncrease)
                 {
                     // Add all remaining steel to LengthAim
-                    lastProduct.LengthAim += remainingSteel;
+                    lastProduct.LengthAimMeters += remainingSteel;
                     remainingSteel = 0;
                 }
                 else
@@ -38,16 +38,16 @@ namespace CasterSimulator.Components
                     double adjustmentNeeded = 4 - remainingSteel;
 
                     // Ensure adjustment does not reduce LengthAim below LengthMin
-                    if (lastProduct.LengthAim - adjustmentNeeded >= lastProduct.LengthMin)
+                    if (lastProduct.LengthAimMeters - adjustmentNeeded >= lastProduct.LengthMin)
                     {
-                        lastProduct.LengthAim -= adjustmentNeeded;
+                        lastProduct.LengthAimMeters -= adjustmentNeeded;
                         remainingSteel = 4;
                     }
                     else
                     {
                         // Adjust as much as possible within LengthMin limit
-                        double actualAdjustment = lastProduct.LengthAim - lastProduct.LengthMin;
-                        lastProduct.LengthAim -= actualAdjustment;
+                        double actualAdjustment = lastProduct.LengthAimMeters - lastProduct.LengthMin;
+                        lastProduct.LengthAimMeters -= actualAdjustment;
                         remainingSteel += actualAdjustment; // Adjust remainingSteel accordingly
                     }
                 }
@@ -57,14 +57,14 @@ namespace CasterSimulator.Components
             while (remainingSteel >= 4)
             {
                 var lastProduct = optimizedSchedule.Last();
-                var product = new Product(lastProduct.SequenceId,lastProduct.CutNumber + 1, Guid.NewGuid().ToString(), lastProduct.LengthAim,
+                var product = new Product(lastProduct.SequenceId,lastProduct.CutNumber + 1, Guid.NewGuid().ToString(), lastProduct.LengthAimMeters,
                     lastProduct.LengthMin,
                     lastProduct.LengthMax);
 
                 // Use as much remainingSteel as possible, but do not exceed LengthMax
-                product.LengthAim = Math.Min(remainingSteel, product.LengthAim);
+                product.LengthAimMeters = Math.Min(remainingSteel, product.LengthAimMeters);
                 optimizedSchedule.Add(product);
-                remainingSteel -= product.LengthAim;
+                remainingSteel -= product.LengthAimMeters;
             }
 
             return optimizedSchedule;

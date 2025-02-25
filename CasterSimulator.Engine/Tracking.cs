@@ -123,7 +123,7 @@ public class Tracking : IDisposable
 
             foreach (var heat in _sequence.Heats.Where(heat =>
                          heat.Value.Status == HeatStatus.Casting &&
-                         Caster.Strand.TotalCastLength - heat.Value.CastLengthAtStartMeters >
+                         Caster.Strand.TotalCastLengthMeters - heat.Value.CastLengthAtStartMeters >
                          Caster.Torch.TorchLocation))
             {
                 heat.Value.Status = HeatStatus.Cutting;
@@ -171,7 +171,7 @@ public class Tracking : IDisposable
 
         _tundishHeatOut = (s, heatId) =>
         {
-            _sequence.Heats[heatId].CastLengthAtStartMeters = Caster.Strand.TotalCastLength;
+            _sequence.Heats[heatId].CastLengthAtStartMeters = Caster.Strand.TotalCastLengthMeters;
             SetHeatStatus(heatId, HeatStatus.Casting);
         };
 
@@ -179,7 +179,7 @@ public class Tracking : IDisposable
         {
             //optimize schedule here
             var optimizedSchedule = CutScheduler.Optimize(
-                Caster.Strand.HeadDistanceFromMold - Caster.Torch.NextProduct.LengthAim,
+                Caster.Strand.HeadFromMoldMeters - Caster.Torch.NextProduct.LengthAimMeters,
                 _sequence.Products.ToList());
             Interlocked.Exchange(ref _sequence.Products, new ObservableConcurrentQueue<Product>(optimizedSchedule));
         };

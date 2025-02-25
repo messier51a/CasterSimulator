@@ -8,7 +8,7 @@ namespace CasterSimulator.Components
         public Product NextProduct { get; private set; } // Next product to be cut
         public double TorchLocation { get; } // Fixed position of the torch in meters
         private double _increment;
-        public double MeasuredCutLength { get; private set; }
+        public double MeasCutLengthMeters { get; private set; }
         public event EventHandler<Product> CutDone; // Event triggered when a product is cut
 
         public Torch(double torchLocation)
@@ -20,9 +20,9 @@ namespace CasterSimulator.Components
         {
             _increment += increment;
             //Console.WriteLine($"MeasuredCutLength raw: {_increment - TorchLocation}");
-            MeasuredCutLength = double.Max(0, _increment - TorchLocation);
-            if (MeasuredCutLength < NextProduct.LengthAim) return;
-            NextProduct.CutLength = MeasuredCutLength;
+            MeasCutLengthMeters = double.Max(0, _increment - TorchLocation);
+            if (MeasCutLengthMeters < NextProduct.LengthAimMeters) return;
+            NextProduct.CutLength = MeasCutLengthMeters;
             _increment = TorchLocation;
             CutDone?.Invoke(this, NextProduct);
         }

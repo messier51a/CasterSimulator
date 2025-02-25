@@ -21,7 +21,7 @@ namespace CasterSimulator.Utils.Extensions
                     $"{area}," +
                     $"product_id=\"{product.ProductId}\" " +
                     $"cut_number={product.CutNumber}," +
-                    $"length_aim={product.LengthAim}," +
+                    $"length_aim={product.LengthAimMeters}," +
                     $"length_min={product.LengthMin}," +
                     $"length_max={product.LengthMax}," +
                     $"width={product.Width}," +

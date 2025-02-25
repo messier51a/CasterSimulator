@@ -15,16 +15,16 @@ namespace CasterSimulator.Components
         public StrandMode Mode => _strandMode;
 
         public double CastLengthIncrement { get; private set; }
-        public double TotalCastLength { get; private set; }
+        public double TotalCastLengthMeters { get; private set; }
         public double TailDistanceFromMold { get; private set; }
-        public double HeadDistanceFromMold { get; set; }
-        public double CastSpeed { get; private set; }
+        public double HeadFromMoldMeters { get; set; }
+        public double CastSpeedMetersMin { get; private set; }
         public event EventHandler? Advanced; // Event triggered when the strand advances
         
         public Strand(double targetCastSpeed, double speedRampDuration = 90)
         {
             _speedControl  = new SpeedControl(0.1, targetCastSpeed, speedRampDuration);
-            CastSpeed = 0;
+            CastSpeedMetersMin = 0;
         }
         public void Start()
         {
@@ -41,9 +41,9 @@ namespace CasterSimulator.Components
         }
         private void AdvanceStrand()
         {
-            CastSpeed = _speedControl.CalculateCurrentSpeed(); 
-            CastLengthIncrement = CastSpeed / 60.0;
-            HeadDistanceFromMold += CastLengthIncrement;
+            CastSpeedMetersMin = _speedControl.CalculateCurrentSpeed(); 
+            CastLengthIncrement = CastSpeedMetersMin / 60.0;
+            HeadFromMoldMeters += CastLengthIncrement;
 
             switch (_strandMode)
             {
@@ -52,7 +52,7 @@ namespace CasterSimulator.Components
                     break;
 
                 case StrandMode.Casting:
-                    TotalCastLength += CastLengthIncrement;
+                    TotalCastLengthMeters += CastLengthIncrement;
                     break;
 
                 case StrandMode.Idle:
