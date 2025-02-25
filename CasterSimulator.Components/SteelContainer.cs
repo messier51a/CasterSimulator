@@ -3,210 +3,117 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using CasterSimulator.Models;
 
-namespace CasterSimulator.Components
+namespace CasterSimulator.Components;
+
+public abstract class SteelContainer(ContainerDetails containerDetails) : IDisposable
 {
-    /// <summary>
-    /// Represents the configuration details of a steel container.
-    /// </summary>
-    public class ContainerDetails
+    private bool _disposed;
+    private bool _thresholdReached;
+    private readonly ConcurrentQueue<HeatMin> _heats = new();
+    private TaskCompletionSource<bool> _pouringCompletionSource = new();
+    private bool _isHeatOut;
+
+    protected readonly ContainerDetails ContainerDetails = containerDetails;
+    public event Action<int, double>? SteelPoured;
+    public event EventHandler<int>? ContainerEmptied;
+    public event EventHandler? WeightThresholdReached;
+    public event EventHandler<int>? HeatOut;
+    public double FlowRate { get; private set; } 
+    public double NetWeight => _heats.Sum(h => h.Weight);
+    public double CrossSectionalArea => ContainerDetails.Width * ContainerDetails.Depth;
+    public int HeatId => _heats.FirstOrDefault()?.Id ?? 0;
+    
+    public void AddSteel(int heatId, double weight)
     {
-        public ContainerDetails(string id, bool autoPour)
+        if (weight > 0)
         {
-            Id = id;
-            AutoPour = autoPour;
+            if (_heats.All(x => x.Id != heatId))
+                _heats.Enqueue(new HeatMin(heatId, weight));
+            else
+                _heats.First(x => x.Id == heatId).Weight += weight;
         }
 
-        public string Id { get; init; }
-        public double Width { get; set; }
-        public double Depth { get; set; }
-        public double MaxLevel { get; set; }
-        public double ThresholdWeight { get; set; }
-        public double InitialFlowRate { get; set; }
-        public double SteelDensity { get; set; } = 7850;
-        public bool AutoPour { get; }
+        if (!_thresholdReached && NetWeight >= ContainerDetails.ThresholdWeight)
+        {
+            _thresholdReached = true;
+            WeightThresholdReached?.Invoke(this, EventArgs.Empty);
+        }
     }
 
-    /// <summary>
-    /// Abstract base class for all steel containers that hold and pour molten steel.
-    /// </summary>
-    public abstract class SteelContainer : IDisposable
+    public async Task PourAsync()
     {
-        private bool _disposed;
-        private bool _thresholdReached;
-        private bool _isHeatOut;
-        private readonly ConcurrentQueue<HeatMin> _heats = new();
-        private IDisposable? _pouringSubscription;
+       
+        FlowRate = ContainerDetails.InitialFlowRate;
+        _pouringCompletionSource = new TaskCompletionSource<bool>();
 
-        protected readonly ContainerDetails _containerDetails;
+        while (NetWeight > 0)
+        {
+            RemoveSteel(FlowRate);
+            await Task.Delay(1000);
+        }
 
-        public event EventHandler? WeightThresholdReached;
-        public event EventHandler? Empty;
-        public event EventHandler<int>? HeatOut;
-        public event EventHandler<HeatMin>? SteelPoured;
+        _pouringCompletionSource.TrySetResult(true);
+    }
 
-        public double FlowRate { get; private set; }
-        public bool IsOpen { get; private set; }
-        public string Id => _containerDetails.Id;
-
-        /// <summary>
-        /// Gets the total net weight of steel in the container in kilograms.
-        /// </summary>
-        public double NetWeight => _heats.Sum(x => x.Weight);
-
-        public HeatMin CurrentHeat => _heats.TryPeek(out var heat) ? heat : null;
+    public void RemoveSteel(double weight)
+    {
+        var lastHeatId = 0;
+        FlowRate = weight;
         
-
-        /// <summary>
-        /// Gets the cross-sectional area of the container in square meters.
-        /// </summary>
-        public double CrossSectionalArea => _containerDetails.Width * _containerDetails.Depth;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SteelContainer"/> class.
-        /// </summary>
-        protected SteelContainer(ContainerDetails details)
+        while (weight > 0 && _heats.TryPeek(out var frontHeat))
         {
-            if (string.IsNullOrWhiteSpace(details?.Id))
-                throw new ArgumentException("ID must be a valid string.", nameof(details.Id));
-
-            _containerDetails = details;
-            FlowRate = details.InitialFlowRate;
-        }
-
-        /// <summary>
-        /// Adds steel to the container and starts pouring if the threshold is reached (when AutoPour is enabled).
-        /// </summary>
-        public void AddSteel(int heatId, double weight)
-        {
-            if (_heats.All(x=>x.Id != heatId))
-                _heats.Enqueue(new HeatMin(heatId, weight));
+            lastHeatId = frontHeat.Id; 
             
-            if (!_heats.TryPeek(out var currentHeat))
-                throw new InvalidOperationException("No heats in container.");
-
-            currentHeat.Weight += weight;
-
-            if (!_thresholdReached && NetWeight >= _containerDetails.ThresholdWeight)
+            if (!_isHeatOut)
             {
-                _thresholdReached = true;
-                WeightThresholdReached?.Invoke(this, EventArgs.Empty);
-
-                if (_containerDetails.AutoPour)
-                    StartPouring();
-            }
-        }
-
-        /// <summary>
-        /// Starts the pouring process.
-        /// </summary>
-        protected void StartPouring()
-        {
-            if (!_containerDetails.AutoPour || _pouringSubscription != null) return;
-
-            _pouringSubscription = Observable
-                .Interval(TimeSpan.FromSeconds(1))
-                .Subscribe(_ => PourSteel());
-        }
-
-        private void PourSteel()
-        {
-            if (NetWeight <= 0)
-            {
-                StopPouring();
-                return;
+                HeatOut?.Invoke(this, frontHeat.Id);
+                _isHeatOut = true;
             }
 
-            var steelWeight = Math.Min(FlowRate, NetWeight);
-            RemoveSteelInternal(steelWeight);
-            var heat = _heats.FirstOrDefault();
-            if (heat != null)
-                SteelPoured?.Invoke(this, heat);
-        }
-
-        /// <summary>
-        /// Stops the pouring process.
-        /// </summary>
-        public void StopPouring()
-        {
-            _pouringSubscription?.Dispose();
-            _pouringSubscription = null;
-        }
-
-        /// <summary>
-        /// Manually removes steel from the container when AutoPour is disabled.
-        /// </summary>
-        public void RemoveSteel(double weight)
-        {
-            if (_containerDetails.AutoPour)
-                throw new InvalidOperationException("Manual removal is only allowed when AutoPour is disabled.");
-
-            RemoveSteelInternal(weight);
-        }
-
-        private void RemoveSteelInternal(double weight)
-        {
-            var lastHeatId = 0;
-
-            while (weight > 0 && _heats.TryPeek(out var heat))
+            if (frontHeat.Weight <= weight)
             {
-                if (!IsOpen) IsOpen = true;
-
-                if (!_isHeatOut)
-                {
-                    HeatOut?.Invoke(this, heat.Id); // Provide heat ID
-                    _isHeatOut = true;
-                }
-
-                if (heat.Weight > weight)
-                {
-                    heat.Weight -= weight;
-                    break;
-                }
-
-                weight -= heat.Weight;
-                lastHeatId = heat.Id;
+                SteelPoured?.Invoke(frontHeat.Id, frontHeat.Weight);
                 _heats.TryDequeue(out _);
+                weight -= frontHeat.Weight;
                 _isHeatOut = false;
             }
-
-            if (NetWeight <= 0)
+            else
             {
-                Empty?.Invoke(this, EventArgs.Empty); // Provide last heat ID
-                IsOpen = false;
+                frontHeat.Weight -= weight;
+                SteelPoured?.Invoke(frontHeat.Id, weight);
+                break;
             }
         }
 
-        /// <summary>
-        /// Gets the current steel level in the container in millimeters.
-        /// </summary>
-        public double GetSteelLevel()
+        if (NetWeight == 0)
         {
-            var volume = NetWeight / _containerDetails.SteelDensity;
-            return Math.Min((volume * 1_000_000) / (_containerDetails.Width * _containerDetails.Depth),
-                _containerDetails.MaxLevel);
+            ContainerEmptied?.Invoke(this, lastHeatId);
         }
+    }
 
-        /// <summary>
-        /// Sets the steel flow rate in kilograms per second.
-        /// </summary>
-        public void SetFlowRate(double flowRate)
-        {
-            FlowRate = flowRate;
-        }
+    public virtual void SetFlowRate(double flowRate)
+    {
+        FlowRate = flowRate;
+    }
 
-        public void Dispose()
-        {
-            if (_disposed) return;
-            _disposed = true;
-            StopPouring();
-            GC.SuppressFinalize(this);
-        }
+    public double GetLevel()
+    {
+        var volume = NetWeight / ContainerDetails.SteelDensity;
+        return (volume / (CrossSectionalArea)) * 1_000;
+    }
 
-        ~SteelContainer()
-        {
-            Dispose();
-        }
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    ~SteelContainer()
+    {
+        Dispose();
     }
 }

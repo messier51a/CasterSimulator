@@ -66,6 +66,7 @@ namespace CasterSimulator.Components
             ArgumentOutOfRangeException.ThrowIfLessThan(newLadle.NetWeight, 20000);
             if (IsRotating) throw new InvalidOperationException($"Cannot add ladle to a rotating turret");
             _ladles[(int)ArmInLoadPosition] = newLadle;
+            
         }
 
 

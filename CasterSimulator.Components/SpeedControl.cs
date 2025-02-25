@@ -5,7 +5,7 @@ public class SpeedControl
     private readonly double _startSpeed;
     private readonly double _targetSpeed;
     private readonly double _duration;
-
+    private Random _random = new Random();
     /// <summary>
     /// Controls the speed ramping process over a specified duration.
     /// </summary>
@@ -29,7 +29,18 @@ public class SpeedControl
     public double CalculateCurrentSpeed()
     {
         if (_elapsedTime >= _duration)
-            return _targetSpeed;
+        {
+            // ✅ Speed has reached target, now introduce small variations (±5-10%)
+            var fluctuatedSpeed = _targetSpeed;
+
+            /*if (_random.NextDouble() < 0.2)  // 20% chance per second
+            {
+                var variation = _random.Next(-4, 5) / 100.0; // ±4% variation
+                fluctuatedSpeed *= (1 + variation);
+            }*/
+
+            return fluctuatedSpeed;
+        }
         _elapsedTime++;
         var progress = Math.Min(_elapsedTime / _duration, 1.0);
         return _startSpeed + (progress * (_targetSpeed - _startSpeed));

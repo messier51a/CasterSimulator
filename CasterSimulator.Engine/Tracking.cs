@@ -27,7 +27,7 @@ public class Tracking : IDisposable
     private EventHandler<int> _ladleClosedHandler;
     private EventHandler _tundishWeightThresholdHandler;
     private EventHandler<int> _tundishHeatOut;
-    private EventHandler _tundishEmptyHandler;
+    private EventHandler<int> _tundishEmptyHandler;
 
     public event Action? HeatStatusChanged;
 
@@ -61,13 +61,14 @@ public class Tracking : IDisposable
                 break;
 
             nextHeat.Status = HeatStatus.Next;
-            var ladle = new Ladle("L001", nextHeat);
+            var ladle = new Ladle("L001");
+            ladle.AddSteel(nextHeat.Id, nextHeat.NetWeight);
             Caster.Turret.AddLadle(ladle);
             await Caster.Turret.Rotate();
             if (Caster.Turret.LadleInCastPosition.Id != ladle.Id)
                 throw new Exception($"Ladle {ladle.Id} is not in cast position.");
             RegisterLadleEvents();
-            var heatId = await Caster.Turret.LadleInCastPosition.PourSteel(300);
+            await Caster.Turret.LadleInCastPosition.PourAsync();
         }
 
         await _castingFinishedSignal.Task;
@@ -148,15 +149,15 @@ public class Tracking : IDisposable
 
     private void RegisterLadleEvents()
     {
-        if (_ladleOpenedHandler is not null) Caster.Ladle.LadleOpened -= _ladleOpenedHandler;
-        if (_ladleClosedHandler is not null) Caster.Ladle.LadleClosed -= _ladleClosedHandler;
+        if (_ladleOpenedHandler is not null) Caster.Ladle.HeatOut -= _ladleOpenedHandler;
+        if (_ladleClosedHandler is not null) Caster.Ladle.ContainerEmptied -= _ladleClosedHandler;
 
         _ladleOpenedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Pouring); };
 
         _ladleClosedHandler = (s, heatId) => { SetHeatStatus(heatId, HeatStatus.Closed); };
 
-        Caster.Ladle.LadleOpened += _ladleOpenedHandler;
-        Caster.Ladle.LadleClosed += _ladleClosedHandler;
+        Caster.Ladle.HeatOut += _ladleOpenedHandler;
+        Caster.Ladle.ContainerEmptied += _ladleClosedHandler;
     }
 
     private void RegisterTundishEvents()
@@ -174,7 +175,7 @@ public class Tracking : IDisposable
             SetHeatStatus(heatId, HeatStatus.Casting);
         };
 
-        _tundishEmptyHandler = (s, e) =>
+        _tundishEmptyHandler = (s, heatId) =>
         {
             //optimize schedule here
             var optimizedSchedule = CutScheduler.Optimize(
@@ -185,7 +186,7 @@ public class Tracking : IDisposable
 
         Caster.Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Caster.Tundish.HeatOut += _tundishHeatOut;
-        Caster.Tundish.Empty += _tundishEmptyHandler;
+        Caster.Tundish.ContainerEmptied += _tundishEmptyHandler;
     }
 
     private void RegisterEvents()
@@ -201,8 +202,8 @@ public class Tracking : IDisposable
         Caster.CastingFinished -= _castingFinishedHandler;
         Caster.Strand.Advanced -= _strandAdvancedHandler;
         Caster.Torch.CutDone -= _torchCutDoneHandler;
-        Caster.Ladle.LadleOpened -= _ladleOpenedHandler;
-        Caster.Ladle.LadleClosed -= _ladleClosedHandler;
+        Caster.Ladle.HeatOut -= _ladleOpenedHandler;
+        Caster.Ladle.ContainerEmptied -= _ladleClosedHandler;
         Caster.Tundish.WeightThresholdReached -= _tundishWeightThresholdHandler;
         Caster.Tundish.HeatOut -= _tundishHeatOut;
     }

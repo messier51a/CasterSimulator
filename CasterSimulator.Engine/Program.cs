@@ -56,10 +56,16 @@ namespace CasterSimulator
                     .Subscribe(async _ =>
                     {
                         overviewSignals.Set("ladle_weight", tracking?.Caster?.Ladle?.NetWeight);
+                        overviewSignals.Set("ladle_flow", tracking?.Caster?.Ladle?.FlowRate);
                         overviewSignals.Set("tundish_weight", tracking?.Caster?.Tundish?.NetWeight);
+                        overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.GetLevel());
+                        overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRate);
+                        overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPosition);
+                        overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.GetLevel());
+                        overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRate);
                         overviewSignals.Set("total_cast_length", tracking?.Caster?.Strand?.TotalCastLength);
                         overviewSignals.Set("cast_speed", tracking?.Caster?.Strand?.CastSpeed);
-                        overviewSignals.Set("heat_id", tracking?.Caster?.Ladle?.Heat?.Id);
+                        overviewSignals.Set("heat_id", tracking?.Caster?.Ladle?.HeatId);
                         overviewSignals.Set("next_cut_id", tracking?.Caster?.Torch.NextProduct?.ProductId);
                         overviewSignals.Set("next_cut_length", tracking?.Caster?.Torch.NextProduct?.LengthAim);
                         overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasuredCutLength);
@@ -79,9 +85,9 @@ namespace CasterSimulator
                         casterChannel.Push();
 
                         Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +
-                                          $"Heat: {tracking?.Caster?.Ladle?.Heat?.Id}, " +
+                                          $"Heat: {tracking?.Caster?.Ladle?.HeatId}, " +
                                           $"Ladle weight: {tracking?.Caster?.Ladle?.NetWeight:F2}, " +
-                                          $"Ladle pour rate: {tracking?.Caster?.Ladle?.PouringRate:F2}, " +
+                                          $"Ladle pour rate: {tracking?.Caster?.Ladle?.FlowRate:F2}, " +
                                           $"Tundish weight: {tracking?.Caster?.Tundish?.NetWeight:F2}, " +
                                           $"Cast speed: {tracking?.Caster?.Strand?.CastSpeed:F2}, " +
                                           $"Cast length inc: {tracking?.Caster?.Strand?.CastLengthIncrement:F2}, " +

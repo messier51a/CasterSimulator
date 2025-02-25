@@ -1,76 +1,65 @@
 ﻿using CasterSimulator.Models;
+using System;
 
-namespace CasterSimulator.Components
+namespace CasterSimulator.Components;
+
+public class Ladle : SteelContainer
 {
-    
+    private readonly Random _random = new Random();
+    private bool _isClogged = false;
+    private int _clogDuration = 0;
 
+    public LadleState State { get; private set; } = LadleState.New;
 
-    public class Ladle
+    public double MaxFlowRate => ContainerDetails.MaxFlowRate;
+    public string Id => ContainerDetails.Id;
+
+    public Ladle(string id)
+        : base(new ContainerDetails(id)
+        {
+            Width = 0,
+            Depth = 0,
+            Height = 0,
+            MaxLevel = 0,
+            ThresholdWeight = 0,
+            InitialFlowRate = 300,
+            MaxFlowRate = 300,
+        })
     {
-        private readonly double _initialSteelWeight;
-        public Heat Heat { get; private set; }
+    }
 
-        public LadleState State { get; private set; } = LadleState.New;
-        public event EventHandler<int>? LadleOpened;
-        public event EventHandler<double>? SteelPoured;
-        public event EventHandler<int>? LadleClosed;
+    public override void SetFlowRate(double baseFlowRate)
+    {
+        var adjustedFlow = GetAdjustedFlowRate(baseFlowRate);
+        base.SetFlowRate(adjustedFlow);
+    }
 
-        public string Id { get; private set; }
-        public double NetWeight { get; private set; }
-        public double PouringRate { get; private set; }
+    private double GetAdjustedFlowRate(double baseFlowRate)
+    {
+        // Small continuous turbulence (±5%)
+        double turbulenceFactor = 1 + (_random.NextDouble() * 0.1 - 0.05);
+        double adjustedFlow = baseFlowRate * turbulenceFactor;
 
-        /// <summary>
-        /// Represents a ladle containing molten steel, managing pouring operations.
-        /// </summary>
-        /// <param name="id">The unique identifier for the ladle. Must be greater than zero.</param>
-        /// <param name="heat">The heat of steel contained in the ladle. Cannot be null.</param>
-        /// <param name="pouringRate">
-        /// The rate at which steel is poured in kilograms per second. Must be greater than zero. Default is 200 kg/s.
-        /// </param>
-        /// <exception cref="ArgumentOutOfRangeException">
-        /// Thrown if <paramref name="id"/> or <paramref name="pouringRate"/> is less than or equal to zero.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="heat"/> is null.
-        /// </exception>
-        public Ladle(string id, Heat heat, double pouringRate = 200.0)
+        // Occasionally add larger spikes (20-30%) simulating slide gate overcorrections
+        if (_random.NextDouble() < 0.05) // 5% chance per step
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(id, nameof(id));
-            ArgumentNullException.ThrowIfNull(heat, nameof(heat));
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(pouringRate, nameof(pouringRate));
-
-            Id = id;
-            Heat = heat;
-            _initialSteelWeight = heat.NetWeight;
-            NetWeight = heat.NetWeight;
-            PouringRate = pouringRate;
+            adjustedFlow *= 1 + (_random.NextDouble() * 0.3 - 0.15); // ±15% variation
         }
 
-
-        public async Task<int> PourSteel(double initialFlowRate)
+        // Simulate occasional clogging events (temporary 50-80% flow reduction)
+        if (_isClogged)
         {
-            PouringRate = initialFlowRate;
-
-            State = LadleState.Open;
-
-            LadleOpened?.Invoke(this, Heat.Id);
-            while (NetWeight > 0)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(1));
-
-                var pouredSteel = Math.Min(PouringRate, NetWeight);
-                NetWeight -= pouredSteel;
-                SteelPoured?.Invoke(this, pouredSteel);
-            }
-
-            State = LadleState.Closed;
-            LadleClosed?.Invoke(this, Heat.Id);
-            return Heat.Id;
+            adjustedFlow *= 0.3 + _random.NextDouble() * 0.5; // Reduce to 30-80% of normal flow
+            _clogDuration--;
+            if (_clogDuration <= 0)
+                _isClogged = false;
+        }
+        else if (_random.NextDouble() < 0.02) // 2% chance per step
+        {
+            _isClogged = true;
+            _clogDuration = _random.Next(3, 7); // Clog lasts 3-7 time steps
         }
 
-        public void SetPouringRate(double newRate)
-        {
-            PouringRate = newRate;
-        }
+        return Math.Max(adjustedFlow, 10); // Ensure a minimum flow
     }
 }

@@ -15,4 +15,9 @@
       <ProjectReference Include="..\CasterSimulator.Models\CasterSimulator.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="SteelContainer copy.cs" />
+      <Compile Remove="Ladle copy.cs" />
+    </ItemGroup>
+
 </Project>
