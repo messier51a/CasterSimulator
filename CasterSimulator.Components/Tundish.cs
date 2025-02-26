@@ -1,4 +1,5 @@
 using System;
+using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
 {
@@ -8,7 +9,7 @@ namespace CasterSimulator.Components
     public class Tundish : SteelContainer
     {
         public double StopperRodPositionPercent => Math.Clamp((FlowRateKgSec / ContainerDetails.MaxFlowRateKgSec) * 100.0, 0, 100);
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="Tundish"/> class.
         /// </summary>
@@ -31,5 +32,6 @@ namespace CasterSimulator.Components
             })
         {
         }
+        
     }
 }

@@ -20,7 +20,8 @@ public static class Schedule
         {
             var heatCount = i.ToString("D2");
             var heatName = $"{sequenceId}-{heatCount}";
-            var heatWeight = new Random().Next(100000, 150000);
+            //var heatWeight = new Random().Next(100000, 150000);
+            var heatWeight = new Random().Next(30000, 50000);
 
             var heat = new Heat(heatId, heatName, heatWeight, _grades[new Random().Next(_grades.Length)]);
             sequence.Heats.TryAdd(heatId, heat);

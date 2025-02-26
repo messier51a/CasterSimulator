@@ -179,9 +179,10 @@ public class Caster : IDisposable
     private void AdjustLadleFlowRate()
     {
         _ladleFlowRateSubscription = Observable.Interval(TimeSpan.FromSeconds(1))
-            .TakeWhile(_ => Ladle.NetWeightKgs > 0)
+            .TakeWhile(_ => Tundish.NetWeightKgs > 0)
             .Subscribe(_ =>
             {
+                if (Ladle.NetWeightKgs == 0) return;
                 var newFlowRate = FlowController.ComputeFlowRate(Tundish.LevelMm, Ladle.FlowRateKgSec, Ladle.MaxFlowRateKgSec,453, 10);
                 Ladle.SetFlowRate(newFlowRate);
             });

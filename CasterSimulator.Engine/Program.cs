@@ -60,6 +60,7 @@ namespace CasterSimulator
                         overviewSignals.Set("tundish_weight", tracking?.Caster?.Tundish?.NetWeightKgs);
                         overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.LevelMm);
                         overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRateKgSec);
+                        overviewSignals.Set("tundish_mixed_steel_pct", tracking?.Caster?.Tundish?.MixedSteelPercent);
                         overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPositionPercent);
                         overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.LevelMm);
                         overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRateKgSec);
@@ -71,17 +72,16 @@ namespace CasterSimulator
                         overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasCutLengthMeters);
                         overviewSignals.Set("head_position", tracking?.Caster?.Strand?.HeadFromMoldMeters);
 
-                        var heats = tracking.Heats.Values.ToArray();
-                        
-                        for (int idx = 0; idx < 5; idx++)
-                        {
-                            
-                            var heatBoundary = (idx < heats.Length) ? heats[idx]?.HeatBoundary : -999;
-                            var heatId = (idx < heats.Length) ? heats[idx]?.Id : 0;
-                            overviewSignals.Set($"heat_{idx}_boundary", heatBoundary);
-                            overviewSignals.Set($"heat_{idx}_id", heatId);
-                        }
+                        var heatsInTundish = tracking.Caster.Tundish.Heats;
 
+                        Enumerable.Range(1, 2).ToList().ForEach(idx =>
+                        {
+                            var heat = heatsInTundish.ElementAtOrDefault(idx - 1);
+                            overviewSignals.Set($"heat_{idx}_id", heat?.Id ?? 0);
+                            overviewSignals.Set($"heat_{idx}_weight", heat?.Weight ?? 0);
+                        });
+
+                        
                         casterChannel.Push();
 
                         Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +

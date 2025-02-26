@@ -31,7 +31,7 @@
             LengthMin  = lengthMin > 0 ? lengthMin : throw new ArgumentException("Product length must be positive.", nameof(lengthMin));
         }
 
-        private Product() { }
+        public Product() { }
 
         public Product Clone()
         {
