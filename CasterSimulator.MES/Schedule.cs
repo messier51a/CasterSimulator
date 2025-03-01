@@ -1,14 +1,26 @@
-﻿using CasterSimulator.Models;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using CasterSimulator.Models;
 
 namespace CasterSimulator.MES;
 
 public static class Schedule
 {
-    private static string[] _grades = new string[] { "X1000", "X1020", "T601", "T602" };
+    public static List<SteelGrade> SteelGrades { get; }
+    
     private static double _steelDensity;
+
+    static Schedule()
+    {
+        string filePath = Path.Combine(Environment.CurrentDirectory, "steel_grades.json");
+        Console.WriteLine($"Loading steel grades...path {filePath}.");
+        var steelGradesDefinition = File.ReadAllText(filePath); 
+        SteelGrades = JsonSerializer.Deserialize<List<SteelGrade>>(steelGradesDefinition);
+    }
 
     public static Sequence GetSquence(double width, double thickness, double steelDensity)
     {
+       
         // Format the date and time as an integer in yyyyMMddHHmm
         _steelDensity = steelDensity;
         var sequenceId = long.Parse(DateTime.Now.ToString("yyMMddHHmm"));
@@ -23,7 +35,7 @@ public static class Schedule
             //var heatWeight = new Random().Next(100000, 150000);
             var heatWeight = new Random().Next(30000, 50000);
 
-            var heat = new Heat(heatId, heatName, heatWeight, _grades[new Random().Next(_grades.Length)]);
+            var heat = new Heat(heatId, heatName, heatWeight, SteelGrades[new Random().Next(SteelGrades.Count)].SteelGradeId);
             sequence.Heats.TryAdd(heatId, heat);
             var productAverageLength = GetRandomProductLength(5, 8);
             var totalEstimatedSlabs = CalculateNumberOfSlabs(

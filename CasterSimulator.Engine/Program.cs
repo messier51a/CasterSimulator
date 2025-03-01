@@ -61,6 +61,7 @@ namespace CasterSimulator
                         overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.LevelMm);
                         overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRateKgSec);
                         overviewSignals.Set("tundish_mixed_steel_pct", tracking?.Caster?.Tundish?.MixedSteelPercent);
+                        overviewSignals.Set("tundish_mixed_steel", tracking?.Caster?.Tundish?.MixedSteelPercent > 0 ? 1 : 0);
                         overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPositionPercent);
                         overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.LevelMm);
                         overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRateKgSec);
@@ -81,7 +82,7 @@ namespace CasterSimulator
                             overviewSignals.Set($"heat_{idx}_weight", heat?.Weight ?? 0);
                         });
 
-                        
+
                         casterChannel.Push();
 
                         Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +
