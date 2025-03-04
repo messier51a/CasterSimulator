@@ -55,23 +55,27 @@ namespace CasterSimulator
                 using var periodicLogger = Observable.Interval(TimeSpan.FromMilliseconds(1000))
                     .Subscribe(async _ =>
                     {
-                        overviewSignals.Set("ladle_weight", tracking?.Caster?.Ladle?.NetWeightKgs);
-                        overviewSignals.Set("ladle_flow", tracking?.Caster?.Ladle?.FlowRateKgSec);
-                        overviewSignals.Set("tundish_weight", tracking?.Caster?.Tundish?.NetWeightKgs);
-                        overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.LevelMm);
-                        overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRateKgSec);
-                        overviewSignals.Set("tundish_mixed_steel_pct", tracking?.Caster?.Tundish?.MixedSteelPercent);
-                        overviewSignals.Set("tundish_mixed_steel", tracking?.Caster?.Tundish?.MixedSteelPercent > 0 ? 1 : 0);
-                        overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPositionPercent);
-                        overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.LevelMm);
-                        overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRateKgSec);
-                        overviewSignals.Set("total_cast_length", tracking?.Caster?.Strand?.TotalCastLengthMeters);
-                        overviewSignals.Set("cast_speed", tracking?.Caster?.Strand?.CastSpeedMetersMin);
-                        overviewSignals.Set("heat_id", tracking?.Caster?.Ladle?.HeatId);
-                        overviewSignals.Set("next_cut_id", tracking?.Caster?.Torch.NextProduct?.ProductId);
-                        overviewSignals.Set("next_cut_length", tracking?.Caster?.Torch.NextProduct?.LengthAimMeters);
-                        overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasCutLengthMeters);
-                        overviewSignals.Set("head_position", tracking?.Caster?.Strand?.HeadFromMoldMeters);
+                        overviewSignals.Set("ladle_weight", tracking?.Caster?.Ladle?.NetWeightKgs ?? 0.0);
+                        overviewSignals.Set("ladle_flow", tracking?.Caster?.Ladle?.FlowRateKgSec ?? 0.0);
+                        overviewSignals.Set("tundish_weight", tracking?.Caster?.Tundish?.NetWeightKgs ?? 0.0);
+                        overviewSignals.Set("tundish_level", tracking?.Caster?.Tundish?.LevelMm ?? 0.0);
+                        overviewSignals.Set("tundish_temperature", tracking?.Caster?.Tundish?.Temperature ?? 0.0);
+                        overviewSignals.Set("tundish_superheat", tracking?.Caster?.Tundish?.SuperheatC ?? 0.0);
+                        overviewSignals.Set("tundish_superheat_target", tracking?.Caster?.Tundish?.SuperheatTargetC ?? 0.0);
+                        overviewSignals.Set("tundish_flow", tracking?.Caster?.Tundish?.FlowRateKgSec ?? 0.0);
+                        overviewSignals.Set("tundish_mixed_steel_pct", tracking?.Caster?.Tundish?.MixedSteelPercent ?? 0.0);
+                        overviewSignals.Set("tundish_mixed_steel", (tracking?.Caster?.Tundish?.MixedSteelPercent ?? 0) > 0 ? 1 : 0);
+                        overviewSignals.Set("tundish_rod_pos", tracking?.Caster?.Tundish?.StopperRodPositionPercent ?? 0.0);
+                        overviewSignals.Set("mold_level", tracking?.Caster?.Mold?.LevelMm ?? 0.0);
+                        overviewSignals.Set("mold_flow", tracking?.Caster?.Mold?.FlowRateKgSec ?? 0.0);
+                        overviewSignals.Set("total_cast_length", tracking?.Caster?.Strand?.TotalCastLengthMeters ?? 0.0);
+                        overviewSignals.Set("cast_speed", tracking?.Caster?.Strand?.CastSpeedMetersMin ?? 0.0);
+                        overviewSignals.Set("heat_id", tracking?.Caster?.Ladle?.HeatId ?? 0);
+                        overviewSignals.Set("steel_grade", tracking?.Caster?.Ladle?.Heats.SingleOrDefault()?.SteelGradeId ?? string.Empty);
+                        overviewSignals.Set("next_cut_id", tracking?.Caster?.Torch.NextProduct?.ProductId ?? string.Empty);
+                        overviewSignals.Set("next_cut_length", tracking?.Caster?.Torch.NextProduct?.LengthAimMeters ?? 0.0);
+                        overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasCutLengthMeters ?? 0.0);
+                        overviewSignals.Set("head_position", tracking?.Caster?.Strand?.HeadFromMoldMeters ?? 0.0);
 
                         var heatsInTundish = tracking.Caster.Tundish.Heats;
 
@@ -82,6 +86,10 @@ namespace CasterSimulator
                             overviewSignals.Set($"heat_{idx}_weight", heat?.Weight ?? 0);
                         });
 
+                        foreach (var section in tracking.Caster.CoolingSections)
+                        {
+                            overviewSignals.Set($"cooling_section_{section.Key}", section.Value.CurrentFlowRate);
+                        }
 
                         casterChannel.Push();
 

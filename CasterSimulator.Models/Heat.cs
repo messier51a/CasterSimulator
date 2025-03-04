@@ -18,7 +18,7 @@ public class Heat
 
     public DateTime? HeatCastingTimeUtc { get; set; } = DateTime.MinValue; // Time when the heat finished casting
     public double CastLengthAtStartMeters { get; set; }
-    public string GradeId { get; set; } // Identifier for the steel grade
+    public string SteelGradeId { get; set; } // Identifier for the steel grade
     public HeatStatus Status { get; set; } = HeatStatus.New;
     public double MixZoneStart { get; set; }
     public double MixZoneEnd { get; set; }
@@ -31,7 +31,7 @@ public class Heat
         Id = heatId;
         NetWeight = netWeight;
         //TapTime = tapTime;
-        GradeId = gradeId ?? throw new ArgumentNullException(nameof(gradeId));
+        SteelGradeId = gradeId ?? throw new ArgumentNullException(nameof(gradeId));
     }
 }
 

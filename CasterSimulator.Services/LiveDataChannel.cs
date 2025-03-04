@@ -141,7 +141,9 @@ namespace CasterSimulator.Streaming
                 signalsPayload.Append($"{key}={formattedValue},");
             }
 
-            var formattedPayload = $"{Area} {signalsPayload.ToString().TrimEnd(',')}";
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1_000_000; // Convert to nanoseconds
+
+            var formattedPayload = $"{Area} {signalsPayload.ToString().TrimEnd(',')} {timestamp}";
 
             //_previousValues = new Dictionary<string, object>(_currentValues); // Update history
             return formattedPayload;

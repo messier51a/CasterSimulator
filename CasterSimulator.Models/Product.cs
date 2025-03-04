@@ -33,17 +33,14 @@
 
         public Product() { }
 
-        public Product Clone()
+        public Product (Product product)
         {
-            return new Product
-            {
-                CutNumber = this.CutNumber,
-                ProductId = this.ProductId,
-                LengthAimMeters = this.LengthAimMeters,
-                LengthMax = this.LengthMax,
-                LengthMin = this.LengthMin,
-                CutLength = this.CutLength
-            };
+            CutNumber = product.CutNumber;
+            ProductId = product.ProductId;
+            LengthAimMeters = product.LengthAimMeters;
+            LengthMax = product.LengthMax;
+            LengthMin = product.LengthMin;
+            CutLength = product.CutLength;
         }
     }
 }

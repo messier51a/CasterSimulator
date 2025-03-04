@@ -2,7 +2,9 @@
   {
     "SteelGradeId": "301",
     "SteelGradeGroup": "HC",
-    "LiquidusTemperatureC": 1535,
+    "LiquidusTemperatureC": 1530.0,
+    "Description": "Austenitic Stainless Steel (High_Carbon)",
+    "TargetSuperheatC": 25,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -36,13 +38,14 @@
         "ElementName": "N",
         "Percentage": 0.1
       }
-    ],
-    "Description": "Austenitic Stainless Steel (High_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "304",
     "SteelGradeGroup": "LC",
-    "LiquidusTemperatureC": 1510,
+    "LiquidusTemperatureC": 1520.0,
+    "Description": "Austenitic Stainless Steel (Low_Carbon)",
+    "TargetSuperheatC": 35,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -76,13 +79,14 @@
         "ElementName": "N",
         "Percentage": 0.1
       }
-    ],
-    "Description": "Austenitic Stainless Steel (Low_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "316",
     "SteelGradeGroup": "LC",
-    "LiquidusTemperatureC": 1400,
+    "LiquidusTemperatureC": 1520.0,
+    "Description": "Austenitic Stainless Steel (Low_Carbon)",
+    "TargetSuperheatC": 35,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -120,13 +124,14 @@
         "ElementName": "N",
         "Percentage": 0.1
       }
-    ],
-    "Description": "Austenitic Stainless Steel (Low_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "321",
     "SteelGradeGroup": "LC",
-    "LiquidusTemperatureC": 1500,
+    "LiquidusTemperatureC": 1520.0,
+    "Description": "Austenitic Stainless Steel (Low_Carbon)",
+    "TargetSuperheatC": 35,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -160,13 +165,14 @@
         "ElementName": "Ti",
         "Percentage": 0.7
       }
-    ],
-    "Description": "Austenitic Stainless Steel (Low_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "410",
     "SteelGradeGroup": "MC",
-    "LiquidusTemperatureC": 1450,
+    "LiquidusTemperatureC": 1525.0,
+    "Description": "Martensitic Stainless Steel (Medium_Carbon)",
+    "TargetSuperheatC": 30,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -196,13 +202,14 @@
         "ElementName": "Ni",
         "Percentage": 0.75
       }
-    ],
-    "Description": "Martensitic Stainless Steel (Medium_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "420",
     "SteelGradeGroup": "HC",
-    "LiquidusTemperatureC": 1435,
+    "LiquidusTemperatureC": 1530.0,
+    "Description": "Martensitic Stainless Steel (High_Carbon)",
+    "TargetSuperheatC": 25,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -228,13 +235,14 @@
         "ElementName": "Cr",
         "Percentage": 13.0
       }
-    ],
-    "Description": "Martensitic Stainless Steel (High_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "430",
     "SteelGradeGroup": "MC",
-    "LiquidusTemperatureC": 1480,
+    "LiquidusTemperatureC": 1525.0,
+    "Description": "Ferritic Stainless Steel (Medium_Carbon)",
+    "TargetSuperheatC": 30,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -260,13 +268,14 @@
         "ElementName": "Cr",
         "Percentage": 17.0
       }
-    ],
-    "Description": "Ferritic Stainless Steel (Medium_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "2205",
     "SteelGradeGroup": "ULC",
-    "LiquidusTemperatureC": 1420,
+    "LiquidusTemperatureC": 1515.0,
+    "Description": "Duplex Stainless Steel (Ultra_Low_Carbon)",
+    "TargetSuperheatC": 40,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -304,13 +313,14 @@
         "ElementName": "N",
         "Percentage": 0.15
       }
-    ],
-    "Description": "Duplex Stainless Steel (Ultra_Low_Carbon)"
+    ]
   },
   {
     "SteelGradeId": "2507",
     "SteelGradeGroup": "ULC",
-    "LiquidusTemperatureC": 1410,
+    "LiquidusTemperatureC": 1515.0,
+    "Description": "Super Duplex Stainless Steel (Ultra_Low_Carbon)",
+    "TargetSuperheatC": 40,
     "Chemistry": [
       {
         "ElementName": "C",
@@ -348,7 +358,6 @@
         "ElementName": "N",
         "Percentage": 0.27
       }
-    ],
-    "Description": "Super Duplex Stainless Steel (Ultra_Low_Carbon)"
+    ]
   }
 ]

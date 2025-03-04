@@ -1,124 +1,91 @@
 ﻿using CasterSimulator.Components;
-using CasterSimulator.MES;
 using CasterSimulator.Models;
-using Microsoft.Win32.SafeHandles;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 class Program
 {
     static void Main(string[] args)
     {
-        var sequence = Schedule.GetSquence(1.56,0.103,7850);
+        var testResults = new List<string>(); // Store both passed and failed tests
 
-        foreach (var heat in sequence.Heats.ToArray())
+        // Define a single list of products to be cut
+        var baseCutSchedule = new List<Product>
         {
-            Console.WriteLine($"{heat.Id}-{heat.Name}-{heat.NetWeight}");
-        }
-
-        foreach (var product in sequence.Products.ToArray())
-        {
-            Console.WriteLine(
-                $"{product.ProductId}-{product.CutNumber}-{product.LengthAimMeters}-{product.LengthMin}-{product.LengthMax}");
-        }
-        
-        Console.ReadKey();
-        return;
-
-        // Define different scenarios for steel length and cut schedule lengths
-        var scenarios = new List<(double steelLength, List<Product> cutSchedule, string description)>
-        {
-            (127,
-                new List<Product>
-                {
-                    new Product(1,0, "0001", 200, 100, 300),
-                    new Product(1,1, "0002", 200, 100, 300)
-                },
-                "Not enough steel for initial schedule"
-            ),
-            (300,
-                new List<Product>
-                {
-                    new Product(1,0, "0001", 200, 100, 300),
-                    new Product(1,1, "0002", 200, 100, 300)
-                },
-                "Not enough steel for initial schedule"
-            ),
-            (600,
-                new List<Product>
-                {
-                    new Product(1,0, "0001", 200, 100, 300),
-                    new Product(1,1, "0002", 200, 100, 300),
-                    new Product(1,2, "0003", 200, 100, 300)
-                },
-                "Exactly enough steel for initial schedule"
-            ),
-            (802,
-                new List<Product>
-                {
-                    new Product(1,0, "0001", 200, 100, 300),
-                    new Product(1,1, "0002", 200, 100, 300),
-                    new Product(1,2, "0003", 200, 100, 300),
-                    new Product(1,3, "0004", 200, 100, 300)
-                },
-                "Small excess of steel"
-            ),
-            (1500,
-                new List<Product>
-                {
-                    new Product(1,0, "0001", 200, 100, 300),
-                    new Product(1,1, "0002", 200, 100, 300),
-                    new Product(1,2, "0003", 200, 100, 300),
-                    new Product(1,3, "0004", 200, 100, 300),
-                    new Product(1,4, "0005", 200, 100, 300)
-                },
-                "Larger excess of steel"
-            ),
-            (1747,
-                new List<Product>
-                {
-                    new Product(1,0, "0001", 200, 100, 300),
-                    new Product(1,1, "0002", 200, 100, 300),
-                    new Product(1,2, "0003", 200, 100, 300),
-                    new Product(1,3, "0004", 200, 100, 300),
-                    new Product(1,4, "0005", 200, 100, 300),
-                    new Product(1,5, "0006", 200, 100, 300)
-                },
-                "Even larger excess of steel"
-            ),
+            CreateProduct(1, 0, 200, 100, 300),
+            CreateProduct(1, 1, 200, 100, 300),
+            CreateProduct(1, 2, 200, 100, 300),
+            CreateProduct(1, 3, 200, 100, 300),
+            CreateProduct(1, 4, 200, 100, 300),
+            CreateProduct(1, 5, 200, 100, 300)
         };
 
-        // Test each scenario
-        foreach (var (steelLength, cutSchedule, description) in scenarios)
+        // Define different strand lengths with expected outcomes
+        var testScenarios = new List<(double steelLength, string description, int expectedCuts, double expectedSteelUsed)>
         {
-            Console.WriteLine("------------------------------------------------------");
-            Console.WriteLine($"Scenario: {description}"); // Print the description
-            Console.WriteLine($"Steel Length: {steelLength}");
-            Console.WriteLine("Cut Schedule:");
-            foreach (var product in cutSchedule)
-            {
-                Console.WriteLine($"{product.ProductId}-{product.LengthAimMeters}");
-            }
-            
+            (127, "Not enough steel - should cut only one slab within available steel", 1, 127),
+            (300, "Not enough steel - should fit one full cut and part of another", 2, 300),
+            (600, "Exactly enough steel for three full cuts", 3, 600),
+            (802, "Small excess of steel - should fit 4 slabs and adjust the last one", 4, 800),
+            (1500, "Larger excess - should fit all slabs and adjust the last one", 6, 1500),
+            (1747, "Even larger excess - should fit all slabs and use remaining steel efficiently", 6, 1747)
+        };
+
+        // Run tests with different strand lengths
+        foreach (var (steelLength, description, expectedCuts, expectedSteelUsed) in testScenarios)
+        {
+            // Clone the base cut schedule to avoid modifying the original list
+            var cutSchedule = baseCutSchedule.Select(p => new Product(p)).ToList();
 
             try
             {
                 var newCutSchedule = CutScheduler.Optimize(steelLength, cutSchedule);
 
-                Console.WriteLine("Optimized cutting schedule:");
-                foreach (var cut in newCutSchedule)
+                double usedSteel = newCutSchedule.Sum(x => x.LengthAimMeters);
+                double remainingSteel = Math.Max(0, steelLength - usedSteel);
+
+                bool cutsMatch = newCutSchedule.Count == expectedCuts;
+                bool steelMatch = Math.Abs(usedSteel - expectedSteelUsed) < 1e-6;
+
+                if (cutsMatch && steelMatch)
                 {
-                    Console.WriteLine($"{cut.ProductId}-{cut.LengthAimMeters}");
+                    testResults.Add($"✅ PASSED: {description} - Expected Cuts: {expectedCuts}, Actual Cuts: {newCutSchedule.Count}, Steel Used: {expectedSteelUsed}m, Remaining: {remainingSteel}m.");
                 }
-
-                Console.WriteLine($"Remaining length: {steelLength - newCutSchedule.Sum(x => x.LengthAimMeters)}");
+                else
+                {
+                    string failMessage = $"❌ FAILED: {description} - ";
+                    if (!cutsMatch) failMessage += $"Expected {expectedCuts} cuts, but got {newCutSchedule.Count}. ";
+                    if (!steelMatch) failMessage += $"Expected {expectedSteelUsed}m steel used, but got {usedSteel}m.";
+                    testResults.Add(failMessage);
+                }
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                testResults.Add($"⚠️ ERROR: {description} - Unexpected error: {ex.Message}");
             }
-
-            Console.WriteLine("------------------------------------------------------\n");
         }
 
+        // Emit final test report
+        Console.WriteLine("\n========== TEST SUMMARY ==========");
+        foreach (var result in testResults)
+        {
+            Console.WriteLine(result);
+        }
+        Console.WriteLine("==================================");
+
         Console.ReadKey();
+    }
+
+    // Helper method to create a product with all required properties
+    static Product CreateProduct(long sequenceId, int cutNumber, double lengthAim, double lengthMin, double lengthMax)
+    {
+        return new Product(sequenceId, cutNumber, Guid.NewGuid().ToString(), lengthAim, lengthMin, lengthMax)
+        {
+            CutLength = lengthAim,
+            Width = 1.56,
+            Thickness = 0.103,
+            Weight = lengthAim * 1.56 * 0.103 * 7850 // Calculate weight based on density
+        };
     }
 }

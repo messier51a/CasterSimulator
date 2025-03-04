@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using System.Text.Json;
 using CasterSimulator.Components;
 using CasterSimulator.Models;
 
@@ -12,11 +14,14 @@ public class Caster : IDisposable
 
     private IDisposable? _ladleFlowRateSubscription;
     private IDisposable _tundishFlowRateSubscription;
+    private CoolingSectionController _coolingSectionController;
     public Turret Turret { get; private set; }
     public Tundish Tundish { get; private set; }
     public Mold Mold { get; private set; }
     public Strand Strand { get; private set; }
     public Torch Torch { get; private set; }
+
+    public ConcurrentDictionary<int, CoolingSection> CoolingSections { get; private set; }
     public Ladle Ladle => Turret.LadleInCastPosition;
 
 
@@ -24,9 +29,9 @@ public class Caster : IDisposable
 
     public event EventHandler? CastingFinished;
 
-    private Action<int, double> _ladleSteelPouredHandler;
+    private Action<HeatMin> _ladleSteelPouredHandler;
     private EventHandler _tundishWeightThresholdHandler;
-    private Action<int, double> _tundishSteelPouredHandler;
+    private Action<HeatMin> _tundishSteelPouredHandler;
     private EventHandler _strandAdvancedHandler;
     private EventHandler<Product> _torchCutDoneHandler;
     private EventHandler? _turretRotatedHandler;
@@ -42,16 +47,27 @@ public class Caster : IDisposable
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="configuration"/>, <paramref name="tundish"/>, or <paramref name="mold"/> is null.
     /// </exception>
-    public Caster(Configuration configuration)
+    public Caster()
     {
-        ArgumentNullException.ThrowIfNull(configuration);
-        _configuration = configuration;
+        var filePath = Path.Combine(Environment.CurrentDirectory, "configuration.json");
+        var configurationJson = File.ReadAllText(filePath);
+        _configuration = JsonSerializer.Deserialize<Configuration>(configurationJson);
+
+        CoolingSections =
+            new ConcurrentDictionary<int, CoolingSection>(
+                _configuration.CoolingSectionConfiguration.Sections.ToDictionary(x => x.Id));
+
         Turret = new Turret();
         Tundish = new Tundish("Tundish001", 0.127);
         Mold = new Mold("Mold001", 1.56, 0.103, 1.0, 0.8);
         Strand = new Strand(_configuration.TargetCastSpeed, _configuration.SpeedRampDuration);
         Torch = new Torch(_configuration.TorchLocation);
-        
+
+        _coolingSectionController = new CoolingSectionController(
+            _configuration.CoolingSectionConfiguration.BaseFlowLps,
+            _configuration.CoolingSectionConfiguration.FlowPerSpeedLps);
+        _coolingSectionController.StartCoolingMonitoring(CoolingSections);
+
         RegisterEvents();
     }
 
@@ -78,11 +94,7 @@ public class Caster : IDisposable
     private void RegisterLadleEvents()
     {
         if (_ladleSteelPouredHandler is not null) Ladle.SteelPoured -= _ladleSteelPouredHandler;
-        _ladleSteelPouredHandler = (s, pouredSteel) =>
-        {
-            if (Ladle.HeatId == 0) throw new Exception("No heat in ladle.");
-            Tundish.AddSteel(Ladle.HeatId, pouredSteel);
-        };
+        _ladleSteelPouredHandler = (heat) => { Tundish.AddSteel(heat); };
         Ladle.SteelPoured += _ladleSteelPouredHandler;
     }
 
@@ -94,30 +106,12 @@ public class Caster : IDisposable
             _ = Tundish.PourAsync();
         };
 
-        _tundishSteelPouredHandler = (heatId, weight) =>
-        {
-            Console.WriteLine($"Add steel to mold {weight} kgs.");
-            Mold.AddSteel(heatId, weight);
-        };
+        _tundishSteelPouredHandler = (heat) => { Mold.AddSteel(heat); };
 
         Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Tundish.SteelPoured += _tundishSteelPouredHandler;
     }
-
-    /*private async void HandlePouring(object? sender, EventArgs e)
-    {
-        try
-        {
-            Console.WriteLine("Threshold reached, starting pouring...");
-            await Tundish.PourAsync();
-            Console.WriteLine("Pouring process completed.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error in PourAsync: {ex.Message}");
-        }
-    }*/
-
+    
     private void RegisterMoldEvents()
     {
         _moldWeightThresholdHandler = (s, e) =>
@@ -150,6 +144,8 @@ public class Caster : IDisposable
                 Strand.Stop();
                 CastingFinished?.Invoke(this, EventArgs.Empty);
             }
+
+            _coolingSectionController.ActivateSections(Strand.HeadFromMoldMeters, Strand.TailDistanceFromMold, Strand.CastSpeedMetersMin);
         };
 
         Strand.Advanced += _strandAdvancedHandler;
@@ -171,7 +167,8 @@ public class Caster : IDisposable
             {
                 //var moldLevel = Mold.GetLevel();
                 //var newFlowRate = _moldLevelController.AdjustFlowRate(moldLevel, Tundish.FlowRate);
-                var newFlowRate = FlowController.ComputeFlowRate(Mold.LevelMm, Tundish.FlowRateKgSec, Tundish.MaxFlowRateKgSec,825, 5);
+                var newFlowRate = FlowController.ComputeFlowRate(Mold.LevelMm, Tundish.FlowRateKgSec,
+                    Tundish.MaxFlowRateKgSec, 825, 5);
                 Tundish.SetFlowRate(newFlowRate);
             });
     }
@@ -183,38 +180,12 @@ public class Caster : IDisposable
             .Subscribe(_ =>
             {
                 if (Ladle.NetWeightKgs == 0) return;
-                var newFlowRate = FlowController.ComputeFlowRate(Tundish.LevelMm, Ladle.FlowRateKgSec, Ladle.MaxFlowRateKgSec,453, 10);
+                var newFlowRate = FlowController.ComputeFlowRate(Tundish.LevelMm, Ladle.FlowRateKgSec,
+                    Ladle.MaxFlowRateKgSec, 453, 10);
                 Ladle.SetFlowRate(newFlowRate);
             });
     }
-
-    /*private void AdjustLadleFlowRate()
-    {
-        /*var weightError = Tundish.NetWeight - _configuration.MaxTundishWeight;
-        var weightDifference = Tundish.NetWeight - _previousTundishWeight;
-        _previousTundishWeight = Tundish.NetWeight;
-
-        // If within tolerance, maintain steady-state pouring
-        if (Math.Abs(weightError) <= _configuration.TundishWeightFluctuationTolerance)
-        {
-            Ladle.SetPouringRate(_configuration.SteadyStateRate);
-            return;
-        }
-
-        // Adjust pouring rate dynamically based on weight error
-        var adjustment =
-            -weightError *
-            _configuration.TundishWeightCorrectionFactor; // Negative means reducing pouring if overweight
-        var newRate = _configuration.SteadyStateRate + adjustment;
-
-        // Ensure rate stays within limits
-        newRate = Math.Clamp(newRate, _configuration.LowPouringRate, _configuration.HighPouringRate);#1#
-
-        //var newRate = _ladleFlowController.ComputeFlowRate(Tundish.NetWeight, Tundish.FlowRate);
-
-    }
-    */
-
+    
     public void Dispose()
     {
         Dispose(true); // Explicit disposal
@@ -246,6 +217,8 @@ public class Caster : IDisposable
             Torch.CutDone -= _torchCutDoneHandler;
 
             Turret.Rotated -= _turretRotatedHandler;
+
+            _coolingSectionController?.Dispose();
         }
 
         _disposed = true;

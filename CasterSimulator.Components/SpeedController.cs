@@ -1,6 +1,6 @@
 namespace CasterSimulator.Components;
 
-public class SpeedControl
+public class SpeedController
 {
     private readonly double _startSpeed;
     private readonly double _targetSpeed;
@@ -13,7 +13,7 @@ public class SpeedControl
     /// <param name="targetSpeed">The target speed in meters per minute. Must be between 1 and 4 (inclusive).</param>
     /// <param name="duration">The time in seconds over which the speed changes. Must be between 0 and 90 (inclusive).</param>
     /// <exception cref="ArgumentException">Thrown if any parameter is out of range.</exception>
-    public SpeedControl(double startSpeed, double targetSpeed, double duration)
+    public SpeedController(double startSpeed, double targetSpeed, double duration)
     {
         if (startSpeed < 0) throw new ArgumentException("Invalid start speed. Must be ≥ 0.");
         if (targetSpeed is < 1 or > 10) throw new ArgumentException("Invalid target speed. Must be between 1 and 10.");

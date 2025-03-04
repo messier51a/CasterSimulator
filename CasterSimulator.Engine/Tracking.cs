@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using CasterSimulator.Common.Collections;
 using CasterSimulator.Components;
+using CasterSimulator.MES;
 using CasterSimulator.Models;
 using CasterSimulator.Utils;
 using CasterSimulator.Utils.Extensions;
@@ -15,6 +16,7 @@ public class Tracking : IDisposable
 
     //private ConcurrentDictionary<int, Heat> _heats = new();
     private Sequence _sequence;
+
     private TaskCompletionSource<bool> _castingFinishedSignal;
     public ConcurrentDictionary<int, Heat> Heats => _sequence.Heats;
     public ObservableConcurrentQueue<Product> CutProducts { get; private set; } = new();
@@ -33,7 +35,7 @@ public class Tracking : IDisposable
 
     public Tracking()
     {
-        Caster = new Caster(new Configuration());
+        Caster = new();
         RegisterEvents();
     }
 
@@ -62,7 +64,13 @@ public class Tracking : IDisposable
 
             nextHeat.Status = HeatStatus.Next;
             var ladle = new Ladle("L001");
-            ladle.AddSteel(nextHeat.Id, nextHeat.NetWeight);
+            var heat = new HeatMin(nextHeat.Id, nextHeat.NetWeight)
+            {
+                SteelGradeId = nextHeat.SteelGradeId,
+                LiquidusTemperatureC = Schedule.SteelGrades[nextHeat.SteelGradeId].LiquidusTemperatureC,
+                TargetSuperheatC = Schedule.SteelGrades[nextHeat.SteelGradeId].TargetSuperheatC
+            };
+            ladle.AddSteel(heat);
             Caster.Turret.AddLadle(ladle);
             await Caster.Turret.Rotate();
             if (Caster.Turret.LadleInCastPosition.Id != ladle.Id)
@@ -138,9 +146,13 @@ public class Tracking : IDisposable
         _torchCutDoneHandler = (s, product) =>
         {
             product.Weight = product.CutLength * product.Width * product.Thickness * _sequence.SteelDensity;
-            CutProducts.Enqueue(product.Clone());
+            CutProducts.Enqueue(new Product(product));
             if (!_sequence.Products.TryDequeue(out var nextProduct))
-                throw new Exception($"No product available");
+            {
+                nextProduct = new Product(Caster.Torch.NextProduct);
+                nextProduct.CutNumber++;
+            }
+
             Caster.Torch.SetNextProduct(nextProduct);
         };
 

@@ -1,25 +1,23 @@
 using System;
+using System.Reactive.Linq;
 using CasterSimulator.Models;
+using System.Linq;
 
 namespace CasterSimulator.Components
 {
-    /// <summary>
-    /// Represents a tundish, which receives molten steel from the ladle and transfers it to the mold.
-    /// </summary>
     public class Tundish : SteelContainer
     {
-        public double StopperRodPositionPercent => Math.Clamp((FlowRateKgSec / ContainerDetails.MaxFlowRateKgSec) * 100.0, 0, 100);
+        public double Temperature { get; private set; }
+
+        public double SuperheatC => CalculateSuperheat();
+        public double SuperheatTargetC => CalculateWeightedAverage(h => h.TargetSuperheatC);
         
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Tundish"/> class.
-        /// </summary>
-        /// <param name="id">Unique identifier for the tundish.</param>
-        /// <param name="width">Tundish width in meters.</param>
-        /// <param name="depth">Tundish depth in meters.</param>
-        /// <param name="maxLevel">Maximum steel level inside the tundish in millimeters.</param>
-        /// <param name="thresholdLevel">Weight at which pouring starts, in kilograms.</param>
-        /// <param name="autoPour">Determines whether the tundish automatically pours when the threshold is reached.</param>
-        /// <param name="flowRate">Steel pouring rate in kilograms per second.</param>
+        public double StopperRodPositionPercent =>
+            Math.Clamp((FlowRateKgSec / ContainerDetails.MaxFlowRateKgSec) * 100.0, 0, 100);
+
+        private bool IsSteelFlowing => FlowRateKgSec > 0;
+        private IDisposable _temperatureUpdater;
+
         public Tundish(string id, double thresholdLevel)
             : base(new ContainerDetails(id)
             {
@@ -31,7 +29,57 @@ namespace CasterSimulator.Components
                 MaxFlowRateKgSec = 150,
             })
         {
+            NewSteelAdded += OnNewSteelAdded;
+            StartTemperatureSimulation();
         }
-        
+
+        private void OnNewSteelAdded(object? sender, int heatId)
+        {
+            if (Heats.Length == 0) return;
+
+            if (Temperature == 0)
+            {
+                // Generate a random temperature around 1550°C with a ±10°C variation
+                Temperature = 1550 + new Random().Next(0, 10);
+            }
+            else
+            {
+                // Small increase when adding new steel
+                Temperature += new Random().NextDouble() * 5 + 3;
+            }
+        }
+
+        private void UpdateTemperature()
+        {
+            if (Temperature == 0) return;
+            var rand = new Random();
+            var coolingRate = IsSteelFlowing ? rand.NextDouble() * 0.05 + 0.02 : rand.NextDouble() * 0.1 + 0.05;
+            Temperature -= coolingRate;
+        }
+
+        private void StartTemperatureSimulation()
+        {
+            _temperatureUpdater = Observable
+                .Interval(TimeSpan.FromSeconds(1))
+                .Subscribe(_ => UpdateTemperature());
+        }
+
+        private double CalculateSuperheat()
+        {
+            var liquidusTemp = CalculateWeightedAverage(h => h.LiquidusTemperatureC);
+            return Temperature - liquidusTemp;
+        }
+
+        private double CalculateWeightedAverage(Func<HeatMin, double> selector)
+        {
+            if (Heats.Length == 0 || NetWeightKgs == 0) return 0.0;
+            return Heats.Sum(h => selector(h) * h.Weight) / NetWeightKgs;
+        }
+
+        public override void Dispose()
+        {
+            _temperatureUpdater?.Dispose();
+            base.Dispose();
+        }
     }
 }

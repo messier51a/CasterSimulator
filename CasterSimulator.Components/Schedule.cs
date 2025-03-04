@@ -6,16 +6,18 @@ namespace CasterSimulator.MES;
 
 public static class Schedule
 {
-    public static List<SteelGrade> SteelGrades { get; }
+    private static readonly List<SteelGrade>? _steelGrades;
+    public static Dictionary<string,SteelGrade> SteelGrades { get; }
     
     private static double _steelDensity;
 
     static Schedule()
     {
-        string filePath = Path.Combine(Environment.CurrentDirectory, "steel_grades.json");
+        var filePath = Path.Combine(Environment.CurrentDirectory, "steel_grades.json");
         Console.WriteLine($"Loading steel grades...path {filePath}.");
         var steelGradesDefinition = File.ReadAllText(filePath); 
-        SteelGrades = JsonSerializer.Deserialize<List<SteelGrade>>(steelGradesDefinition);
+        _steelGrades = JsonSerializer.Deserialize<List<SteelGrade>>(steelGradesDefinition);
+        SteelGrades = _steelGrades.ToDictionary(x => x.SteelGradeId);
     }
 
     public static Sequence GetSquence(double width, double thickness, double steelDensity)
@@ -35,7 +37,7 @@ public static class Schedule
             //var heatWeight = new Random().Next(100000, 150000);
             var heatWeight = new Random().Next(30000, 50000);
 
-            var heat = new Heat(heatId, heatName, heatWeight, SteelGrades[new Random().Next(SteelGrades.Count)].SteelGradeId);
+            var heat = new Heat(heatId, heatName, heatWeight, _steelGrades[new Random().Next(_steelGrades.Count)].SteelGradeId);
             sequence.Heats.TryAdd(heatId, heat);
             var productAverageLength = GetRandomProductLength(5, 8);
             var totalEstimatedSlabs = CalculateNumberOfSlabs(

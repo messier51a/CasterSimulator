@@ -11,13 +11,19 @@ namespace CasterSimulator.Components
         {
             var optimizedSchedule = cutSchedule.OrderBy(x => x.CutNumber).ToList();
             // Initialize with cutSchedule for efficiency
-            while (optimizedSchedule.Count > 0 && steelInStrand < optimizedSchedule.Sum(x => x.LengthAimMeters))
+            while (optimizedSchedule.Count > 1 && steelInStrand < optimizedSchedule.Sum(x => x.LengthAimMeters))
             {
                 optimizedSchedule.RemoveAt(optimizedSchedule.Count - 1);
             }
 
+            if (optimizedSchedule.Count == 1)
+            {
+                optimizedSchedule.FirstOrDefault().LengthAimMeters = steelInStrand;
+                return optimizedSchedule;
+            }
+
             var remainingSteel =
-                steelInStrand - cutSchedule.Sum(x => x.LengthAimMeters); // Calculate remainingSteel directly
+                steelInStrand - optimizedSchedule.Sum(x => x.LengthAimMeters); // Calculate remainingSteel directly
 
             // Adjust last product's LengthAim if remainingSteel is between 0 and 4
             if (remainingSteel is > 0 and < 4)
@@ -25,7 +31,7 @@ namespace CasterSimulator.Components
                 var lastProduct = optimizedSchedule.Last();
 
                 // Check if we can add all remainingSteel to LengthAim while staying under LengthMax
-                double possibleIncrease = lastProduct.LengthMax - lastProduct.LengthAimMeters;
+                var possibleIncrease = lastProduct.LengthMax - lastProduct.LengthAimMeters;
                 if (remainingSteel <= possibleIncrease)
                 {
                     // Add all remaining steel to LengthAim
@@ -35,7 +41,7 @@ namespace CasterSimulator.Components
                 else
                 {
                     // Calculate adjustment needed to make remainingSteel exactly 4
-                    double adjustmentNeeded = 4 - remainingSteel;
+                    var adjustmentNeeded = 4 - remainingSteel;
 
                     // Ensure adjustment does not reduce LengthAim below LengthMin
                     if (lastProduct.LengthAimMeters - adjustmentNeeded >= lastProduct.LengthMin)
@@ -46,7 +52,7 @@ namespace CasterSimulator.Components
                     else
                     {
                         // Adjust as much as possible within LengthMin limit
-                        double actualAdjustment = lastProduct.LengthAimMeters - lastProduct.LengthMin;
+                        var actualAdjustment = lastProduct.LengthAimMeters - lastProduct.LengthMin;
                         lastProduct.LengthAimMeters -= actualAdjustment;
                         remainingSteel += actualAdjustment; // Adjust remainingSteel accordingly
                     }
@@ -57,7 +63,8 @@ namespace CasterSimulator.Components
             while (remainingSteel >= 4)
             {
                 var lastProduct = optimizedSchedule.Last();
-                var product = new Product(lastProduct.SequenceId,lastProduct.CutNumber + 1, Guid.NewGuid().ToString(), lastProduct.LengthAimMeters,
+                var product = new Product(lastProduct.SequenceId, lastProduct.CutNumber + 1, Guid.NewGuid().ToString(),
+                    lastProduct.LengthAimMeters,
                     lastProduct.LengthMin,
                     lastProduct.LengthMax);
 

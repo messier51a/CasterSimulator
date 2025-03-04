@@ -13,7 +13,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
     private bool _disposed;
     private bool _thresholdReached;
     private readonly ConcurrentQueue<HeatMin> _heats = new();
-    public HeatMin[] Heats => _heats.ToArray();
+    public HeatMin[] Heats => _heats.OrderBy(x=>x.Id).ToArray();
     private TaskCompletionSource<bool> _pouringCompletionSource = new();
     private bool _isHeatOut;
 
@@ -21,8 +21,10 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
     private double _mixedSteelWeightKgs;
     public double MixedSteelPercent => NetWeightKgs > 0 ? (_mixedSteelWeightKgs / NetWeightKgs) * 100 : 0;
 
-    public event Action<int, double>? SteelPoured;
+    public event Action<HeatMin>? SteelPoured;
     public event EventHandler<int>? ContainerEmptied;
+
+    public event EventHandler<int>? NewSteelAdded;
     public event EventHandler? WeightThresholdReached;
     public event EventHandler<int>? HeatOut;
     public double FlowRateKgSec { get; private set; }
@@ -42,20 +44,24 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
     public double CrossSectionalArea => ContainerDetails.Width * ContainerDetails.Depth;
     public int HeatId => _heats.FirstOrDefault()?.Id ?? 0;
 
-    public void AddSteel(int heatId, double weight)
+    public virtual void AddSteel(HeatMin heat)
     {
+        ArgumentNullException.ThrowIfNull(heat);
+        
+        var weight = heat.Weight;
         if (weight > 0)
         {
-            if (_heats.All(x => x.Id != heatId))
+            if (_heats.All(x => x.Id != heat.Id))
             {
                 if (!_heats.IsEmpty)
                     _mixedSteelWeightKgs = NetWeightKgs * 0.5;
-                _heats.Enqueue(new HeatMin(heatId, weight));
+                _heats.Enqueue(new HeatMin(heat));
+                NewSteelAdded?.Invoke(this, heat.Id);
             }
 
             else
             {
-                _heats.First(x => x.Id == heatId).Weight += weight;
+                _heats.First(x => x.Id == heat.Id).Weight += weight;
             }
         }
 
@@ -97,7 +103,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
 
             if (frontHeat.Weight <= weight)
             {
-                SteelPoured?.Invoke(frontHeat.Id, frontHeat.Weight);
+                SteelPoured?.Invoke(frontHeat);
                 _heats.TryDequeue(out _);
                 weight -= frontHeat.Weight;
                 _isHeatOut = false;
@@ -105,7 +111,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
             else
             {
                 frontHeat.Weight -= weight;
-                SteelPoured?.Invoke(frontHeat.Id, weight);
+                SteelPoured?.Invoke(new HeatMin(frontHeat) { Weight = weight });
                 break;
             }
         }
@@ -127,7 +133,7 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
         FlowRateKgSec = flowRate;
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         if (_disposed) return;
         _disposed = true;

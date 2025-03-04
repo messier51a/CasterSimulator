@@ -1,7 +1,6 @@
 using System;
 using System.Reactive.Linq;
 using System.Reflection.Metadata;
-using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
 {
@@ -9,26 +8,24 @@ namespace CasterSimulator.Components
     {
         private bool _disposed;
         private IDisposable? _strandMonitorSubscription;
-        private StrandMode _strandMode = StrandMode.Idle;
-        private readonly SpeedControl _speedControl;
-
-        public StrandMode Mode => _strandMode;
-
+        private readonly SpeedController _speedController;
+        public StrandMode Mode { get; private set; } = StrandMode.Idle;
         public double CastLengthIncrement { get; private set; }
         public double TotalCastLengthMeters { get; private set; }
         public double TailDistanceFromMold { get; private set; }
         public double HeadFromMoldMeters { get; set; }
         public double CastSpeedMetersMin { get; private set; }
+
         public event EventHandler? Advanced; // Event triggered when the strand advances
         
         public Strand(double targetCastSpeed, double speedRampDuration = 90)
         {
-            _speedControl  = new SpeedControl(0.1, targetCastSpeed, speedRampDuration);
+            _speedController  = new SpeedController(0.1, targetCastSpeed, speedRampDuration);
             CastSpeedMetersMin = 0;
         }
         public void Start()
         {
-            _strandMode = StrandMode.Casting;
+            Mode = StrandMode.Casting;
 
             _strandMonitorSubscription = Observable
                 .Interval(TimeSpan.FromSeconds(1))
@@ -37,15 +34,15 @@ namespace CasterSimulator.Components
         
         public void SetMode(StrandMode strandMode)
         {
-            _strandMode = strandMode;
+            Mode = strandMode;
         }
         private void AdvanceStrand()
         {
-            CastSpeedMetersMin = _speedControl.CalculateCurrentSpeed(); 
+            CastSpeedMetersMin = _speedController.CalculateCurrentSpeed(); 
             CastLengthIncrement = CastSpeedMetersMin / 60.0;
             HeadFromMoldMeters += CastLengthIncrement;
 
-            switch (_strandMode)
+            switch (Mode)
             {
                 case StrandMode.Tailout:
                     TailDistanceFromMold += CastLengthIncrement;
@@ -69,7 +66,7 @@ namespace CasterSimulator.Components
 
         public void Stop()
         {
-            _strandMode = StrandMode.Idle;
+            Mode = StrandMode.Idle;
             _strandMonitorSubscription?.Dispose();
             _strandMonitorSubscription = null;
         }
