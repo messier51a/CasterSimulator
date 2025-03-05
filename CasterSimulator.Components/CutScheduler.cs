@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CasterSimulator.Enums;
 using CasterSimulator.Models;
 
 namespace CasterSimulator.Components
@@ -9,71 +10,85 @@ namespace CasterSimulator.Components
     {
         public static List<Product> Optimize(double steelInStrand, List<Product> cutSchedule)
         {
-            var optimizedSchedule = cutSchedule.OrderBy(x => x.CutNumber).ToList();
-            // Initialize with cutSchedule for efficiency
-            while (optimizedSchedule.Count > 1 && steelInStrand < optimizedSchedule.Sum(x => x.LengthAimMeters))
+            ArgumentNullException.ThrowIfNull(cutSchedule);
+            ArgumentOutOfRangeException.ThrowIfZero(cutSchedule.Count);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(steelInStrand);
+
+            if (cutSchedule.Any(cut => cut.LengthAimMeters == 0 || cut.LengthMin == 0 || cut.LengthMax == 0))
+                throw new ArgumentException($"Invalid cutSchedule data.", nameof(cutSchedule));
+
+            var optimizedSchedule = new List<Product>();
+            var sortedCutSchedule = new Queue<Product>(cutSchedule.OrderBy(x => x.CutNumber));
+            var remainingSteel = steelInStrand;
+            int dynamicProductCounter = 0;
+
+            while (remainingSteel > 0)
             {
-                optimizedSchedule.RemoveAt(optimizedSchedule.Count - 1);
-            }
-
-            if (optimizedSchedule.Count == 1)
-            {
-                optimizedSchedule.FirstOrDefault().LengthAimMeters = steelInStrand;
-                return optimizedSchedule;
-            }
-
-            var remainingSteel =
-                steelInStrand - optimizedSchedule.Sum(x => x.LengthAimMeters); // Calculate remainingSteel directly
-
-            // Adjust last product's LengthAim if remainingSteel is between 0 and 4
-            if (remainingSteel is > 0 and < 4)
-            {
-                var lastProduct = optimizedSchedule.Last();
-
-                // Check if we can add all remainingSteel to LengthAim while staying under LengthMax
-                var possibleIncrease = lastProduct.LengthMax - lastProduct.LengthAimMeters;
-                if (remainingSteel <= possibleIncrease)
-                {
-                    // Add all remaining steel to LengthAim
-                    lastProduct.LengthAimMeters += remainingSteel;
-                    remainingSteel = 0;
-                }
-                else
-                {
-                    // Calculate adjustment needed to make remainingSteel exactly 4
-                    var adjustmentNeeded = 4 - remainingSteel;
-
-                    // Ensure adjustment does not reduce LengthAim below LengthMin
-                    if (lastProduct.LengthAimMeters - adjustmentNeeded >= lastProduct.LengthMin)
+                var nextCut = sortedCutSchedule.TryDequeue(out var product)
+                    ? new Product(product)
+                    : new Product(optimizedSchedule.Last())
                     {
-                        lastProduct.LengthAimMeters -= adjustmentNeeded;
-                        remainingSteel = 4;
+                        CutNumber = optimizedSchedule.Last().CutNumber + 1,
+                        IsPlanned = false
+                    };
+
+                if (remainingSteel - nextCut.LengthAimMeters < 0)
+                {
+                    if (remainingSteel >= nextCut.LengthMin)
+                    {
+                        nextCut.LengthAimMeters = remainingSteel;
                     }
                     else
                     {
-                        // Adjust as much as possible within LengthMin limit
-                        var actualAdjustment = lastProduct.LengthAimMeters - lastProduct.LengthMin;
-                        lastProduct.LengthAimMeters -= actualAdjustment;
-                        remainingSteel += actualAdjustment; // Adjust remainingSteel accordingly
+                        break;
                     }
                 }
+
+                if (!nextCut.IsPlanned)
+                    nextCut.ProductId = $"{nextCut.ProductId}-{dynamicProductCounter++:D2}";
+
+                optimizedSchedule.Add(nextCut);
+                remainingSteel -= nextCut.LengthAimMeters;
+
+                if (remainingSteel == 0) return optimizedSchedule;
             }
 
-            // Handle additional slabs while remainingSteel is greater than or equal to 4
-            while (remainingSteel >= 4)
+            var lastCut = optimizedSchedule[^1];
+
+            if (remainingSteel >= 4)
             {
-                var lastProduct = optimizedSchedule.Last();
-                var product = new Product(lastProduct.SequenceId, lastProduct.CutNumber + 1, Guid.NewGuid().ToString(),
-                    lastProduct.LengthAimMeters,
-                    lastProduct.LengthMin,
-                    lastProduct.LengthMax);
+                optimizedSchedule.Add(new Product(lastCut)
+                {
+                    ProductId = $"{lastCut.ProductId}-{dynamicProductCounter++:D2}",
+                    CutNumber = lastCut.CutNumber + 1,
+                    IsPlanned = false,
+                    LengthAimMeters = remainingSteel,
+                    LengthMin = remainingSteel,
+                    LengthMax = remainingSteel
+                });
 
-                // Use as much remainingSteel as possible, but do not exceed LengthMax
-                product.LengthAimMeters = Math.Min(remainingSteel, product.LengthAimMeters);
-                optimizedSchedule.Add(product);
-                remainingSteel -= product.LengthAimMeters;
+                return optimizedSchedule;
             }
-
+            
+            if (lastCut.LengthAimMeters + remainingSteel <= lastCut.LengthMax)
+            {
+                lastCut.LengthAimMeters += remainingSteel;
+            }
+            else
+            {
+                var excessSteel = 4 - remainingSteel;
+                lastCut.LengthAimMeters -= excessSteel;
+                optimizedSchedule.Add(new Product
+                {
+                    SequenceId = lastCut.SequenceId,
+                    ProductId = $"{lastCut.SequenceId}-TAIL",
+                    ProductType = ProductType.Tail,
+                    IsPlanned = false,
+                    LengthAimMeters = excessSteel,
+                    CutNumber = optimizedSchedule.Last().CutNumber + 1
+                });
+            }
+            
             return optimizedSchedule;
         }
     }

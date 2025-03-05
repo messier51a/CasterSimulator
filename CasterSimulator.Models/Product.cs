@@ -1,10 +1,15 @@
-﻿namespace CasterSimulator.Models
+﻿using CasterSimulator.Enums;
+
+namespace CasterSimulator.Models
 {
     public class Product
     {
         public long SequenceId { get; set; }
         public int CutNumber { get; set; }
         public string ProductId { get; set; }
+        public ProductType ProductType { get; set; } = ProductType.Slab;
+
+        public bool IsPlanned { get; set; } = true;
         public double LengthAimMeters { get; set; }
         
         public double LengthMax { get; set; }
