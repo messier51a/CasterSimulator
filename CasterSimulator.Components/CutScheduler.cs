@@ -20,7 +20,7 @@ namespace CasterSimulator.Components
             var optimizedSchedule = new List<Product>();
             var sortedCutSchedule = new Queue<Product>(cutSchedule.OrderBy(x => x.CutNumber));
             var remainingSteel = steelInStrand;
-            int dynamicProductCounter = 0;
+            int dynamicProductCounter = 1;
 
             while (remainingSteel > 0)
             {
@@ -45,7 +45,7 @@ namespace CasterSimulator.Components
                 }
 
                 if (!nextCut.IsPlanned)
-                    nextCut.ProductId = $"{nextCut.ProductId}-{dynamicProductCounter++:D2}";
+                    nextCut.ProductId = $"{nextCut.SequenceId}-{dynamicProductCounter++:D2}E";
 
                 optimizedSchedule.Add(nextCut);
                 remainingSteel -= nextCut.LengthAimMeters;
@@ -59,7 +59,7 @@ namespace CasterSimulator.Components
             {
                 optimizedSchedule.Add(new Product(lastCut)
                 {
-                    ProductId = $"{lastCut.ProductId}-{dynamicProductCounter++:D2}",
+                    ProductId = $"{lastCut.SequenceId}-{dynamicProductCounter++:D2}E",
                     CutNumber = lastCut.CutNumber + 1,
                     IsPlanned = false,
                     LengthAimMeters = remainingSteel,

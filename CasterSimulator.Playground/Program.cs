@@ -13,12 +13,12 @@ class Program
         // Define a single list of products to be cut
         var baseCutSchedule = new List<Product>
         {
-            CreateProduct(1, 1, 15, 8, 20),
-            CreateProduct(1, 2, 15, 8, 20),
-            CreateProduct(1, 3, 15, 8, 20),
-            CreateProduct(1, 4, 15, 8, 20),
-            CreateProduct(1, 5, 15, 8, 20),
-            CreateProduct(1, 6, 15, 8, 17)
+            CreateProduct(1, 1, "P01",15, 8, 20),
+            CreateProduct(1, 2, "P02",15, 8, 20),
+            CreateProduct(1, 3, "P03",15, 8, 20),
+            CreateProduct(1, 4, "P04",15, 8, 20),
+            CreateProduct(1, 5, "P05",15, 8, 20),
+            CreateProduct(1, 6, "P06",15, 8, 17)
             
         };
 
@@ -105,11 +105,12 @@ class Program
     }
 
     // Helper method to create a product with all required properties
-    static Product CreateProduct(long sequenceId, int cutNumber, double lengthAim, double lengthMin, double lengthMax)
+    static Product CreateProduct(long sequenceId, int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
         // Updated cut schedule with new LengthAim, LengthMin, and LengthMax
     {
-        return new Product(sequenceId, cutNumber, Guid.NewGuid().ToString(), lengthAim, lengthMin, lengthMax)
+        return new Product(sequenceId, cutNumber, productId, lengthAim, lengthMin, lengthMax)
         {
+            ProductId = productId,
             CutLength = lengthAim,
             Width = 1.56,
             Thickness = 0.103,
