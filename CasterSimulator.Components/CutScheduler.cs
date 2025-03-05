@@ -83,7 +83,7 @@ namespace CasterSimulator.Components
                     SequenceId = lastCut.SequenceId,
                     ProductId = $"{lastCut.SequenceId}-TAIL",
                     ProductType = ProductType.Tail,
-                    IsPlanned = false,  
+                    IsPlanned = false,      
                     LengthAimMeters = 4,
                     CutNumber = optimizedSchedule.Last().CutNumber + 1
                 });

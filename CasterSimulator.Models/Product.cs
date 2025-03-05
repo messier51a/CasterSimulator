@@ -40,6 +40,7 @@ namespace CasterSimulator.Models
 
         public Product (Product product)
         {
+            SequenceId = product.SequenceId;
             CutNumber = product.CutNumber;
             ProductId = product.ProductId;
             LengthAimMeters = product.LengthAimMeters;

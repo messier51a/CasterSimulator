@@ -32,7 +32,8 @@ class Program
             (92, "Larger excess - should fit all slabs and adjust the last one", 6, 92, false),
             (117, "Even larger excess - should fit all slabs and use remaining steel efficiently", 8, 117, false),
             (33, "Remaining steel less than 4m - should adjust last cut to prevent <4m left", 2, 33, false),
-            (93, "Remaining steel less than 4m - cannot adjust last cut to prevent <4m left, tail cut", 7, 93, true)
+            (93, "Remaining steel less than 4m - cannot adjust last cut to prevent <4m left, tail cut", 7, 93, true),
+            (96, "Remaining steel more than 4m - cannot adjust last cut", 7, 96, false)
             
         };
 
@@ -75,6 +76,25 @@ class Program
 
         // Emit final test report
         Console.WriteLine("\n========== TEST SUMMARY ==========");
+
+        // Emit final test report with a table of the optimized schedule
+        Console.WriteLine("\n========== OPTIMIZED SCHEDULE DETAILS ==========");
+        foreach (var (steelLength, description, expectedCuts, expectedSteelUsed, expectTailCut) in testScenarios)
+        {
+            var cutSchedule = baseCutSchedule.Select(p => new Product(p)).ToList();
+            var newCutSchedule = CutScheduler.Optimize(steelLength, cutSchedule);
+            
+            Console.WriteLine($"\nTest Case: {description}");
+            Console.WriteLine("----------------------------------------------------------------------------------------------------");
+            Console.WriteLine("| ProductId       | CutNumber | LengthAim | LengthMin | LengthMax | Weight (kg) | Planned |");
+            Console.WriteLine("----------------------------------------------------------------------------------------------------");
+            
+            foreach (var product in newCutSchedule)
+            {
+                Console.WriteLine($"| {product.ProductId,-15} | {product.CutNumber,9} | {product.LengthAimMeters,10} | {product.LengthMin,10} | {product.LengthMax,10} | {product.Weight,12:F2} | {(product.IsPlanned ? "Yes" : "No"),7} |");
+            }
+            Console.WriteLine("----------------------------------------------------------------------------------------------------");
+        }
         foreach (var result in testResults)
         {
             Console.WriteLine(result);
