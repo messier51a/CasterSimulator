@@ -18,7 +18,8 @@ class Program
             CreateProduct(1, 3, 15, 8, 20),
             CreateProduct(1, 4, 15, 8, 20),
             CreateProduct(1, 5, 15, 8, 20),
-            CreateProduct(1, 6, 15, 8, 20)
+            CreateProduct(1, 6, 15, 8, 17)
+            
         };
 
         // Define different strand lengths with expected outcomes
@@ -30,7 +31,9 @@ class Program
             (63, "Small excess of steel - should fit 4 slabs and adjust the last one", 4, 63, false),
             (92, "Larger excess - should fit all slabs and adjust the last one", 6, 92, false),
             (117, "Even larger excess - should fit all slabs and use remaining steel efficiently", 8, 117, false),
-            (33, "Remaining steel less than 4m - should adjust last cut to prevent <4m left", 2, 33, false)
+            (33, "Remaining steel less than 4m - should adjust last cut to prevent <4m left", 2, 33, false),
+            (93, "Remaining steel less than 4m - cannot adjust last cut to prevent <4m left, tail cut", 7, 93, true)
+            
         };
 
         // Run tests
