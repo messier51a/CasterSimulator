@@ -60,5 +60,20 @@ namespace CasterSimulator.Simulator.Services
                 return null;
             }
         }
+        
+        public async Task<bool> UpdateProductsAsync(List<Product> products)
+        {
+            try
+            {
+                string url = $"{_baseUrl}/api/products";
+                HttpResponseMessage response = await _httpClient.PostAsJsonAsync(url, products);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
     }
 }

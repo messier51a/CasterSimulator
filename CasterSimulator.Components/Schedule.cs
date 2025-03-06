@@ -27,15 +27,15 @@ public static class Schedule
         _steelDensity = steelDensity;
         var sequenceId = long.Parse(DateTime.Now.ToString("yyMMddHHmm"));
         var sequence = new Sequence(sequenceId, width, thickness, steelDensity);
-        var totalHeats = new Random().Next(3, 3);
-        var cutCount = 0;
+        var totalHeats = 1;//new Random().Next(3, 3);
+        var cutCount = 1;
         var heatId = GetMinutesSince2024();
         for (var i = 0; i < totalHeats; i++)
         {
             var heatCount = i.ToString("D2");
             var heatName = $"{sequenceId}-{heatCount}";
             //var heatWeight = new Random().Next(100000, 150000);
-            var heatWeight = new Random().Next(30000, 50000);
+            var heatWeight = 20000; //new Random().Next(30000, 50000);
 
             var heat = new Heat(heatId, heatName, heatWeight, _steelGrades[new Random().Next(_steelGrades.Count)].SteelGradeId);
             sequence.Heats.TryAdd(heatId, heat);
@@ -71,18 +71,12 @@ public static class Schedule
 
     static int CalculateNumberOfSlabs(double steelInKgs, double slabWidth, double slabThickness, double slabLength)
     {
-        // Calculate the volume of one slab in cubic meters
-        var slabVolume = slabWidth * slabThickness * slabLength; // Dimensions are in meters
-
-        // Steel density (assumed to be 7850 kg/m³)
-
-
-        // Calculate the mass of one slab in kgs
+        var slabVolume = slabWidth * slabThickness * slabLength; 
         var slabMass = slabVolume * _steelDensity;
 
-        // Calculate the number of slabs that can be produced
-        return (int)(steelInKgs / slabMass);
+        return (int)Math.Ceiling(steelInKgs / slabMass);
     }
+
 
     static double GetRandomProductLength(double min, double max)
     {

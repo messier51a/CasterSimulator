@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CasterSimulator.Enums;
@@ -8,7 +9,7 @@ namespace CasterSimulator.Components
 {
     public static class CutScheduler
     {
-        public static List<Product> Optimize(double steelInStrand, List<Product> cutSchedule)
+        public static Queue<Product> Optimize(double steelInStrand, Queue<Product> cutSchedule)
         {
             ArgumentNullException.ThrowIfNull(cutSchedule);
             ArgumentOutOfRangeException.ThrowIfZero(cutSchedule.Count);
@@ -17,18 +18,22 @@ namespace CasterSimulator.Components
             if (cutSchedule.Any(cut => cut.LengthAimMeters == 0 || cut.LengthMin == 0 || cut.LengthMax == 0))
                 throw new ArgumentException($"Invalid cutSchedule data.", nameof(cutSchedule));
 
-            var optimizedSchedule = new List<Product>();
-            var sortedCutSchedule = new Queue<Product>(cutSchedule.OrderBy(x => x.CutNumber));
+            var optimizedSchedule = new Queue<Product>();
             var remainingSteel = steelInStrand;
             int dynamicProductCounter = 1;
 
+            Console.WriteLine($"Optimizing cutSchedule. Steel length: {steelInStrand}");
+            foreach (var product in cutSchedule)
+            {
+                Console.WriteLine($"Product Id: {product.ProductId}, length aim: {product.LengthAimMeters}");
+            }
+
             while (remainingSteel > 0)
             {
-                var nextCut = sortedCutSchedule.TryDequeue(out var product)
+                var nextCut = cutSchedule.TryDequeue(out var product)
                     ? new Product(product)
                     : new Product(optimizedSchedule.Last())
                     {
-                        CutNumber = optimizedSchedule.Last().CutNumber + 1,
                         IsPlanned = false
                     };
 
@@ -47,21 +52,30 @@ namespace CasterSimulator.Components
                 if (!nextCut.IsPlanned)
                     nextCut.ProductId = $"{nextCut.SequenceId}-{dynamicProductCounter++:D2}E";
 
-                optimizedSchedule.Add(nextCut);
+                optimizedSchedule.Enqueue(nextCut);
                 remainingSteel -= nextCut.LengthAimMeters;
 
-                if (remainingSteel == 0) return optimizedSchedule;
+                if (remainingSteel == 0)
+                    return optimizedSchedule;
             }
 
-            var lastCut = optimizedSchedule[^1];
+            Product lastCut;
+
+            if (optimizedSchedule.Count > 0)
+            {
+                lastCut = optimizedSchedule.Last();
+                lastCut.ProductId = $"{lastCut.SequenceId}-{dynamicProductCounter++:D2}E";
+                lastCut.IsPlanned = false;
+            }
+            else
+            {
+                lastCut = cutSchedule.Last();
+            }
 
             if (remainingSteel >= 4)
             {
-                optimizedSchedule.Add(new Product(lastCut)
+                optimizedSchedule.Enqueue(new Product(lastCut)
                 {
-                    ProductId = $"{lastCut.SequenceId}-{dynamicProductCounter++:D2}E",
-                    CutNumber = lastCut.CutNumber + 1,
-                    IsPlanned = false,
                     LengthAimMeters = remainingSteel,
                     LengthMin = remainingSteel,
                     LengthMax = remainingSteel
@@ -69,7 +83,7 @@ namespace CasterSimulator.Components
 
                 return optimizedSchedule;
             }
-            
+
             if (lastCut.LengthAimMeters + remainingSteel <= lastCut.LengthMax)
             {
                 lastCut.LengthAimMeters += remainingSteel;
@@ -78,17 +92,17 @@ namespace CasterSimulator.Components
             {
                 var excessSteel = 4 - remainingSteel;
                 lastCut.LengthAimMeters -= excessSteel;
-                optimizedSchedule.Add(new Product
+                optimizedSchedule.Enqueue(new Product
                 {
                     SequenceId = lastCut.SequenceId,
                     ProductId = $"{lastCut.SequenceId}-TAIL",
                     ProductType = ProductType.Tail,
-                    IsPlanned = false,      
-                    LengthAimMeters = 4,
-                    CutNumber = optimizedSchedule.Last().CutNumber + 1
+                    IsPlanned = false,
+                    LengthAimMeters = 4
+                    
                 });
             }
-            
+
             return optimizedSchedule;
         }
     }

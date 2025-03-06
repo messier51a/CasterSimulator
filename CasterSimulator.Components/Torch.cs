@@ -27,7 +27,7 @@ namespace CasterSimulator.Components
             CutDone?.Invoke(this, NextProduct);
         }
 
-        public void SetNextProduct(Product product)
+        public void SetNextProduct(Product? product)
         {
             NextProduct = product ?? throw new ArgumentNullException(nameof(product), "Next product cannot be null.");
         }

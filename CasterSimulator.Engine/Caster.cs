@@ -139,13 +139,13 @@ public class Caster : IDisposable
 
             Torch.Measure(Strand.CastLengthIncrement);
 
-            if (Strand.TailDistanceFromMold > Torch.TorchLocation)
+            if (Strand.TailFromMoldMeters > Torch.TorchLocation)
             {
                 Strand.Stop();
                 CastingFinished?.Invoke(this, EventArgs.Empty);
             }
 
-            _coolingSectionController.ActivateSections(Strand.HeadFromMoldMeters, Strand.TailDistanceFromMold, Strand.CastSpeedMetersMin);
+            _coolingSectionController.ActivateSections(Strand.HeadFromMoldMeters, Strand.TailFromMoldMeters, Strand.CastSpeedMetersMin);
         };
 
         Strand.Advanced += _strandAdvancedHandler;

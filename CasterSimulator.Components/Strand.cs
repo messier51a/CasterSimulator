@@ -12,7 +12,7 @@ namespace CasterSimulator.Components
         public StrandMode Mode { get; private set; } = StrandMode.Idle;
         public double CastLengthIncrement { get; private set; }
         public double TotalCastLengthMeters { get; private set; }
-        public double TailDistanceFromMold { get; private set; }
+        public double TailFromMoldMeters { get; private set; }
         public double HeadFromMoldMeters { get; set; }
         public double CastSpeedMetersMin { get; private set; }
 
@@ -45,7 +45,7 @@ namespace CasterSimulator.Components
             switch (Mode)
             {
                 case StrandMode.Tailout:
-                    TailDistanceFromMold += CastLengthIncrement;
+                    TailFromMoldMeters += CastLengthIncrement;
                     break;
 
                 case StrandMode.Casting:

@@ -11,20 +11,18 @@ class Program
         var testResults = new List<string>(); // Store test outcomes
 
         // Define a single list of products to be cut
-        var baseCutSchedule = new List<Product>
-        {
-            CreateProduct(1, 1, "P01",15, 8, 20),
-            CreateProduct(1, 2, "P02",15, 8, 20),
-            CreateProduct(1, 3, "P03",15, 8, 20),
-            CreateProduct(1, 4, "P04",15, 8, 20),
-            CreateProduct(1, 5, "P05",15, 8, 20),
-            CreateProduct(1, 6, "P06",15, 8, 17)
-            
-        };
+        var baseCutSchedule = new Queue<Product>();
+        baseCutSchedule.Enqueue(CreateProduct(1, 1, "P01", 15, 8, 20));
+        baseCutSchedule.Enqueue(CreateProduct(1, 2, "P02", 15, 8, 20));
+        baseCutSchedule.Enqueue(CreateProduct(1, 3, "P03", 15, 8, 20));
+        baseCutSchedule.Enqueue(CreateProduct(1, 4, "P04", 15, 8, 20));
+        baseCutSchedule.Enqueue(CreateProduct(1, 5, "P05", 15, 8, 20));
+        baseCutSchedule.Enqueue(CreateProduct(1, 6, "P06", 15, 8, 17));
 
         // Define different strand lengths with expected outcomes
         var testScenarios = new List<(double steelLength, string description, int expectedCuts, double expectedSteelUsed, bool expectTailCut)>
         {
+            (6.3, "Not enough steel, one slab scheduled - should cut only one slab with available steel", 1, 6.3, false),
             (16, "Not enough steel - should cut only one slab within available steel", 1, 16, false),
             (25, "Not enough steel - should fit one full cut and part of another", 2, 25, false),
             (45, "Exactly enough steel for three full cuts", 3, 45, false),
@@ -41,11 +39,11 @@ class Program
         foreach (var (steelLength, description, expectedCuts, expectedSteelUsed, expectTailCut) in testScenarios)
         {
             // Clone the base cut schedule to avoid modifying the original list
-            var cutSchedule = baseCutSchedule.Select(p => new Product(p)).ToList();
+            var cutSchedule = baseCutSchedule.Select(p => new Product(p));
 
             try
             {
-                var newCutSchedule = CutScheduler.Optimize(steelLength, cutSchedule);
+                var newCutSchedule = CutScheduler.Optimize(steelLength, new Queue<Product>(cutSchedule));
 
                 double usedSteel = newCutSchedule.Sum(x => x.LengthAimMeters);
                 double remainingSteel = Math.Max(0, steelLength - usedSteel);
@@ -79,22 +77,7 @@ class Program
 
         // Emit final test report with a table of the optimized schedule
         Console.WriteLine("\n========== OPTIMIZED SCHEDULE DETAILS ==========");
-        foreach (var (steelLength, description, expectedCuts, expectedSteelUsed, expectTailCut) in testScenarios)
-        {
-            var cutSchedule = baseCutSchedule.Select(p => new Product(p)).ToList();
-            var newCutSchedule = CutScheduler.Optimize(steelLength, cutSchedule);
-            
-            Console.WriteLine($"\nTest Case: {description}");
-            Console.WriteLine("----------------------------------------------------------------------------------------------------");
-            Console.WriteLine("| ProductId       | CutNumber | LengthAim | LengthMin | LengthMax | Weight (kg) | Planned |");
-            Console.WriteLine("----------------------------------------------------------------------------------------------------");
-            
-            foreach (var product in newCutSchedule)
-            {
-                Console.WriteLine($"| {product.ProductId,-15} | {product.CutNumber,9} | {product.LengthAimMeters,10} | {product.LengthMin,10} | {product.LengthMax,10} | {product.Weight,12:F2} | {(product.IsPlanned ? "Yes" : "No"),7} |");
-            }
-            Console.WriteLine("----------------------------------------------------------------------------------------------------");
-        }
+   
         foreach (var result in testResults)
         {
             Console.WriteLine(result);

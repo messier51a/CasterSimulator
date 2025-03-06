@@ -20,7 +20,7 @@ namespace CasterSimulator.Utils.Extensions
                     CultureInfo.InvariantCulture,
                     $"{area}," +
                     $"product_id=\"{product.ProductId}\" " +
-                    $"cut_number={product.CutNumber}," +
+                   // $"cut_number={product.CutNumber}," +
                     $"length_aim={product.LengthAimMeters}," +
                     $"length_min={product.LengthMin}," +
                     $"length_max={product.LengthMax}," +

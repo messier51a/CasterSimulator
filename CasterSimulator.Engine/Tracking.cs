@@ -17,6 +17,8 @@ public class Tracking : IDisposable
     //private ConcurrentDictionary<int, Heat> _heats = new();
     private Sequence _sequence;
 
+    private bool _isScheduleOptimized;
+    
     private TaskCompletionSource<bool> _castingFinishedSignal;
     public ConcurrentDictionary<int, Heat> Heats => _sequence.Heats;
     public ObservableConcurrentQueue<Product> CutProducts { get; private set; } = new();
@@ -47,6 +49,8 @@ public class Tracking : IDisposable
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Products.Count, nameof(sequence.Products));
 
         _sequence = sequence;
+
+        _isScheduleOptimized = false;
 
         _castingFinishedSignal = new TaskCompletionSource<bool>();
 
@@ -147,10 +151,22 @@ public class Tracking : IDisposable
         {
             product.Weight = product.CutLength * product.Width * product.Thickness * _sequence.SteelDensity;
             CutProducts.Enqueue(new Product(product));
+
+            if (Caster.Strand.Mode == StrandMode.Tailout && !_isScheduleOptimized)
+            {
+                Console.WriteLine($"Optimizing schedule. Head pos: {Caster.Strand.HeadFromMoldMeters}. Tail pos: {Caster.Strand.TailFromMoldMeters}");
+                var optimizedSchedule = CutScheduler.Optimize(
+                    Caster.Strand.HeadFromMoldMeters - Caster.Strand.TailFromMoldMeters,
+                    new Queue<Product>(_sequence.Products));
+                _sequence.Products.ReplaceAll(optimizedSchedule);
+                _isScheduleOptimized = true;
+                Console.WriteLine($"Schedule Optimized!");
+            }
+          
             if (!_sequence.Products.TryDequeue(out var nextProduct))
             {
                 nextProduct = new Product(Caster.Torch.NextProduct);
-                nextProduct.CutNumber++;
+                //nextProduct.CutNumber++;
             }
 
             Caster.Torch.SetNextProduct(nextProduct);
@@ -186,16 +202,7 @@ public class Tracking : IDisposable
             _sequence.Heats[heatId].CastLengthAtStartMeters = Caster.Strand.TotalCastLengthMeters;
             SetHeatStatus(heatId, HeatStatus.Casting);
         };
-
-        _tundishEmptyHandler = (s, heatId) =>
-        {
-            //optimize schedule here
-            var optimizedSchedule = CutScheduler.Optimize(
-                Caster.Strand.HeadFromMoldMeters - Caster.Torch.NextProduct.LengthAimMeters,
-                _sequence.Products.ToList());
-            Interlocked.Exchange(ref _sequence.Products, new ObservableConcurrentQueue<Product>(optimizedSchedule));
-        };
-
+        
         Caster.Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Caster.Tundish.HeatOut += _tundishHeatOut;
         Caster.Tundish.ContainerEmptied += _tundishEmptyHandler;

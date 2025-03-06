@@ -51,6 +51,11 @@ namespace CasterSimulator
                     var success = await apiClient.UpdateCutScheduleAsync(sequence.Products.ToList());
                 };
 
+                tracking.CutProducts.CollectionChanged += async () =>
+                {
+                    var success = await apiClient.UpdateProductsAsync(tracking.CutProducts.ToList());
+                };
+
                 // Observable interval for periodic logging
                 using var periodicLogger = Observable.Interval(TimeSpan.FromMilliseconds(1000))
                     .Subscribe(async _ =>
@@ -76,6 +81,7 @@ namespace CasterSimulator
                         overviewSignals.Set("next_cut_length", tracking?.Caster?.Torch.NextProduct?.LengthAimMeters ?? 0.0);
                         overviewSignals.Set("measured_cut_length", tracking?.Caster?.Torch.MeasCutLengthMeters ?? 0.0);
                         overviewSignals.Set("head_position", tracking?.Caster?.Strand?.HeadFromMoldMeters ?? 0.0);
+                        overviewSignals.Set("tail_position", tracking?.Caster?.Strand?.TailFromMoldMeters ?? 0.0);
 
                         var heatsInTundish = tracking.Caster.Tundish.Heats;
 
