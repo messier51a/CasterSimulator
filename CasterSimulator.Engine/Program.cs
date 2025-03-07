@@ -11,7 +11,6 @@ using CasterSimulator.Models;
 using System.Threading.Tasks;
 using CasterSimulator.Simulator.Services;
 using CasterSimulator.Streaming;
-using CasterSimulator.Utils.Extensions;
 using Newtonsoft.Json;
 
 namespace CasterSimulator
@@ -99,7 +98,7 @@ namespace CasterSimulator
 
                         casterChannel.Push();
 
-                        Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +
+                        /*Console.WriteLine($"Strand Mode: {tracking?.Caster?.Strand?.Mode}, " +
                                           $"Heat: {tracking?.Caster?.Ladle?.HeatId}, " +
                                           $"Ladle weight: {tracking?.Caster?.Ladle?.NetWeightKgs:F2}, " +
                                           $"Ladle pour rate: {tracking?.Caster?.Ladle?.FlowRateKgSec:F2}, " +
@@ -113,7 +112,7 @@ namespace CasterSimulator
                         foreach (var product in tracking?.CutProducts.ToArray())
                         {
                             Console.WriteLine($"Product {product.ProductId} length {product.CutLength}");
-                        }
+                        }*/
                     });
 
                 // Start the simulation

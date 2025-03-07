@@ -3,8 +3,6 @@ using CasterSimulator.Common.Collections;
 using CasterSimulator.Components;
 using CasterSimulator.MES;
 using CasterSimulator.Models;
-using CasterSimulator.Utils;
-using CasterSimulator.Utils.Extensions;
 
 namespace CasterSimulator.Engine;
 
@@ -149,18 +147,22 @@ public class Tracking : IDisposable
     {
         _torchCutDoneHandler = (s, product) =>
         {
+            Console.WriteLine($"Cut done {product.ProductId}, {product.CutLength} meters");
             product.Weight = product.CutLength * product.Width * product.Thickness * _sequence.SteelDensity;
-            CutProducts.Enqueue(new Product(product));
-
+            CutProducts.Enqueue(product);
+            
             if (Caster.Strand.Mode == StrandMode.Tailout && !_isScheduleOptimized)
             {
-                Console.WriteLine($"Optimizing schedule. Head pos: {Caster.Strand.HeadFromMoldMeters}. Tail pos: {Caster.Strand.TailFromMoldMeters}");
                 var optimizedSchedule = CutScheduler.Optimize(
                     Caster.Strand.HeadFromMoldMeters - Caster.Strand.TailFromMoldMeters,
                     new Queue<Product>(_sequence.Products));
                 _sequence.Products.ReplaceAll(optimizedSchedule);
                 _isScheduleOptimized = true;
-                Console.WriteLine($"Schedule Optimized!");
+                Console.WriteLine($"Schedule Optimized at {DateTime.Now.ToShortTimeString()}");
+                foreach (var p in _sequence.Products)
+                {
+                    Console.WriteLine($"Product {p.ProductId}");
+                }
             }
           
             if (!_sequence.Products.TryDequeue(out var nextProduct))
@@ -169,6 +171,7 @@ public class Tracking : IDisposable
                 //nextProduct.CutNumber++;
             }
 
+            Console.WriteLine($"Next to cut: {nextProduct.ProductId}");
             Caster.Torch.SetNextProduct(nextProduct);
         };
 

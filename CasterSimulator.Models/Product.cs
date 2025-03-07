@@ -41,12 +41,17 @@ namespace CasterSimulator.Models
         public Product (Product product)
         {
             SequenceId = product.SequenceId;
-            //CutNumber = product.CutNumber;
             ProductId = product.ProductId;
+            ProductType = product.ProductType;
+            IsPlanned = product.IsPlanned;
             LengthAimMeters = product.LengthAimMeters;
             LengthMax = product.LengthMax;
             LengthMin = product.LengthMin;
             CutLength = product.CutLength;
+            Width = product.Width;
+            Thickness = product.Thickness;
+            Weight = product.Weight;
+            CastLengthStart = product.CastLengthStart;
         }
     }
 }

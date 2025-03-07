@@ -21,6 +21,7 @@ namespace CasterSimulator.Components
             var optimizedSchedule = new Queue<Product>();
             var remainingSteel = steelInStrand;
             int dynamicProductCounter = 1;
+            Product _pendingCut = null;
 
             Console.WriteLine($"Optimizing cutSchedule. Steel length: {steelInStrand}");
             foreach (var product in cutSchedule)
@@ -43,14 +44,16 @@ namespace CasterSimulator.Components
                     {
                         nextCut.LengthAimMeters = remainingSteel;
                     }
-                    else
+                    else 
                     {
+                        if (cutSchedule.Count == 0)
+                            _pendingCut = nextCut;
                         break;
                     }
                 }
 
                 if (!nextCut.IsPlanned)
-                    nextCut.ProductId = $"{nextCut.SequenceId}-{dynamicProductCounter++:D2}E";
+                    nextCut.ProductId = $"{nextCut.SequenceId}-{dynamicProductCounter++:D2}A";
 
                 optimizedSchedule.Enqueue(nextCut);
                 remainingSteel -= nextCut.LengthAimMeters;
@@ -59,22 +62,17 @@ namespace CasterSimulator.Components
                     return optimizedSchedule;
             }
 
-            Product lastCut;
-
             if (optimizedSchedule.Count > 0)
             {
-                lastCut = optimizedSchedule.Last();
-                lastCut.ProductId = $"{lastCut.SequenceId}-{dynamicProductCounter++:D2}E";
-                lastCut.IsPlanned = false;
+                _pendingCut = optimizedSchedule.Last();
+                _pendingCut.ProductId = $"{_pendingCut.SequenceId}-{dynamicProductCounter++:D2}A";
             }
-            else
-            {
-                lastCut = cutSchedule.Last();
-            }
+            
+            _pendingCut.IsPlanned = false;
 
             if (remainingSteel >= 4)
             {
-                optimizedSchedule.Enqueue(new Product(lastCut)
+                optimizedSchedule.Enqueue(new Product(_pendingCut)
                 {
                     LengthAimMeters = remainingSteel,
                     LengthMin = remainingSteel,
@@ -84,18 +82,18 @@ namespace CasterSimulator.Components
                 return optimizedSchedule;
             }
 
-            if (lastCut.LengthAimMeters + remainingSteel <= lastCut.LengthMax)
+            if (_pendingCut.LengthAimMeters + remainingSteel <= _pendingCut.LengthMax)
             {
-                lastCut.LengthAimMeters += remainingSteel;
+                _pendingCut.LengthAimMeters += remainingSteel;
             }
             else
             {
                 var excessSteel = 4 - remainingSteel;
-                lastCut.LengthAimMeters -= excessSteel;
+                _pendingCut.LengthAimMeters -= excessSteel;
                 optimizedSchedule.Enqueue(new Product
                 {
-                    SequenceId = lastCut.SequenceId,
-                    ProductId = $"{lastCut.SequenceId}-TAIL",
+                    SequenceId = _pendingCut.SequenceId,
+                    ProductId = $"{_pendingCut.SequenceId}-TAIL",
                     ProductType = ProductType.Tail,
                     IsPlanned = false,
                     LengthAimMeters = 4

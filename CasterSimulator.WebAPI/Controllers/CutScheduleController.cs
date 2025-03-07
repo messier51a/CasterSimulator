@@ -21,6 +21,11 @@ namespace CasterSimulator.WebAPI.Controllers
             if (cutSchedule == null || cutSchedule.Count == 0)
                 return BadRequest("Cut schedule cannot be empty.");
 
+            Console.WriteLine($"Cut schedule updated");
+            foreach (var cut in cutSchedule)
+            {
+                Console.WriteLine($"Product: {cut.ProductId}");
+            }
             _cutSchedule = cutSchedule;
             return Ok(new { Message = "Cut schedule updated successfully." });
         }

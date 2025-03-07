@@ -4,7 +4,6 @@ namespace CasterSimulator.Common.Collections;
 
 public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
 {
-    private bool _suppressEvents = false;
     public event Action? CollectionChanged;
 
     // Default constructor (empty queue)
@@ -21,14 +20,13 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
     public new void Enqueue(T item)
     {
         base.Enqueue(item);
-        if (!_suppressEvents)
             CollectionChanged?.Invoke();
     }
 
     public new bool TryDequeue(out T? item)
     {
         var result = base.TryDequeue(out item);
-        if (result && !_suppressEvents)
+        if (result)
         {
             CollectionChanged?.Invoke();
         }
@@ -38,8 +36,6 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
 
     public void ReplaceAll(IEnumerable<T> newItems)
     {
-        _suppressEvents = true;
-
         while (TryDequeue(out _))
         {
         } // Clear the queue without triggering events
@@ -48,8 +44,6 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
         {
             base.Enqueue(item);
         }
-
-        _suppressEvents = false;
         
         CollectionChanged?.Invoke(); // Trigger only once
     }
