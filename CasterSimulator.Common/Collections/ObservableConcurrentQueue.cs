@@ -20,7 +20,7 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
     public new void Enqueue(T item)
     {
         base.Enqueue(item);
-            CollectionChanged?.Invoke();
+        CollectionChanged?.Invoke();
     }
 
     public new bool TryDequeue(out T? item)
@@ -28,6 +28,7 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
         var result = base.TryDequeue(out item);
         if (result)
         {
+            Console.WriteLine($"CollectionChanged invoked on TryDequeue - {DateTime.Now.ToLongTimeString()}");
             CollectionChanged?.Invoke();
         }
 
@@ -44,7 +45,7 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
         {
             base.Enqueue(item);
         }
-        
+
         CollectionChanged?.Invoke(); // Trigger only once
     }
 }

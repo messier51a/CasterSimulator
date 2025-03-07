@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using CasterSimulator.Common.Collections;
 using CasterSimulator.Enums;
 using CasterSimulator.Models;
 
@@ -9,7 +10,7 @@ namespace CasterSimulator.Components
 {
     public static class CutScheduler
     {
-        public static Queue<Product> Optimize(double steelInStrand, Queue<Product> cutSchedule)
+        public static Queue<Product> Optimize(double steelInStrand, ObservableConcurrentQueue<Product> cutSchedule)
         {
             ArgumentNullException.ThrowIfNull(cutSchedule);
             ArgumentOutOfRangeException.ThrowIfZero(cutSchedule.Count);

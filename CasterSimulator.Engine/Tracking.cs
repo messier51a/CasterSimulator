@@ -33,30 +33,30 @@ public class Tracking : IDisposable
 
     public event Action? HeatStatusChanged;
 
-    public Tracking()
-    {
-        Caster = new();
-        RegisterEvents();
-    }
-
-    public async Task<long> StartSequence(Sequence sequence)
+    public Tracking(Sequence sequence)
     {
         ArgumentNullException.ThrowIfNull(sequence, nameof(sequence));
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Id, nameof(sequence.Id));
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Heats.Count, nameof(sequence.Heats));
         ArgumentOutOfRangeException.ThrowIfZero(sequence.Products.Count, nameof(sequence.Products));
-
+        
         _sequence = sequence;
+        
+        Caster = new Caster();
+        RegisterEvents();
+    }
 
+    public async Task<long> StartSequence()
+    {
         _isScheduleOptimized = false;
 
         _castingFinishedSignal = new TaskCompletionSource<bool>();
 
-        Console.WriteLine(sequence.Heats.Count);
+        Console.WriteLine(_sequence.Heats.Count);
 
-        while (sequence.Heats.Values.Any(heat => heat.Status == HeatStatus.New))
+        while (_sequence.Heats.Values.Any(heat => heat.Status == HeatStatus.New))
         {
-            var nextHeat = sequence.Heats.Values
+            var nextHeat = _sequence.Heats.Values
                 .Where(heat => heat.Status == HeatStatus.New)
                 .OrderBy(heat => heat.Id)
                 .FirstOrDefault();
@@ -82,7 +82,7 @@ public class Tracking : IDisposable
         }
 
         await _castingFinishedSignal.Task;
-        return sequence.Id;
+        return _sequence.Id;
     }
 
     private void SetHeatStatus(int heatId, HeatStatus status)
@@ -155,10 +155,10 @@ public class Tracking : IDisposable
             {
                 var optimizedSchedule = CutScheduler.Optimize(
                     Caster.Strand.HeadFromMoldMeters - Caster.Strand.TailFromMoldMeters,
-                    new Queue<Product>(_sequence.Products));
+                    _sequence.Products);
                 _sequence.Products.ReplaceAll(optimizedSchedule);
                 _isScheduleOptimized = true;
-                Console.WriteLine($"Schedule Optimized at {DateTime.Now.ToShortTimeString()}");
+                Console.WriteLine($"Schedule Optimized at {DateTime.Now.ToLongTimeString()}");
                 foreach (var p in _sequence.Products)
                 {
                     Console.WriteLine($"Product {p.ProductId}");
@@ -171,7 +171,7 @@ public class Tracking : IDisposable
                 //nextProduct.CutNumber++;
             }
 
-            Console.WriteLine($"Next to cut: {nextProduct.ProductId}");
+            Console.WriteLine($"Next to cut: {nextProduct.ProductId} - {DateTime.Now.ToLongTimeString()}");
             Caster.Torch.SetNextProduct(nextProduct);
         };
 

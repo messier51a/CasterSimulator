@@ -33,7 +33,7 @@ namespace CasterSimulator
                 // Retrieve sequence and initialize simulation engine
                 var sequence = MES.Schedule.GetSquence(1.56d, 0.103d, 7850);
                 Console.WriteLine($"Total heats {sequence.Heats.Count}");
-                using var tracking = new Tracking();
+                using var tracking = new Tracking(sequence);
 
                 tracking.Caster.Tundish.WeightThresholdReached += async (sender, i) =>
                 {
@@ -45,9 +45,9 @@ namespace CasterSimulator
                     var success = await apiClient.UpdateHeatScheduleAsync(tracking.Heats.Values.ToList());
                 };
 
-                sequence.Products.CollectionChanged += async () =>
+                tracking.Products.CollectionChanged += async () =>
                 {
-                    var success = await apiClient.UpdateCutScheduleAsync(sequence.Products.ToList());
+                    var success = await apiClient.UpdateCutScheduleAsync(tracking.Products.ToList());
                 };
 
                 tracking.CutProducts.CollectionChanged += async () =>
@@ -117,7 +117,7 @@ namespace CasterSimulator
 
                 // Start the simulation
                 Console.WriteLine("\n=== Starting Simulation ===");
-                await tracking.StartSequence(sequence);
+                await tracking.StartSequence();
                 Console.WriteLine("\n=== Simulation Completed ===");
                 foreach (var heat in tracking.Heats.Values.ToArray())
                 {
