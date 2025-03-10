@@ -47,13 +47,16 @@ namespace CasterSimulator
 
                 tracking.Products.CollectionChanged += async () =>
                 {
+                    Console.WriteLine($"📢 CollectionChanged triggered for Products at {DateTime.Now.ToLongTimeString()}. Products count: {tracking.Products.Count}");
                     var success = await apiClient.UpdateCutScheduleAsync(tracking.Products.ToList());
                 };
+
 
                 tracking.CutProducts.CollectionChanged += async () =>
                 {
                     var success = await apiClient.UpdateProductsAsync(tracking.CutProducts.ToList());
                 };
+
 
                 // Observable interval for periodic logging
                 using var periodicLogger = Observable.Interval(TimeSpan.FromMilliseconds(1000))

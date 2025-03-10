@@ -38,7 +38,7 @@ namespace CasterSimulator.Models
 
         public Product() { }
 
-        public Product (Product product)
+        public Product (Product? product)
         {
             SequenceId = product.SequenceId;
             ProductId = product.ProductId;

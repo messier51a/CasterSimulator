@@ -18,14 +18,17 @@ namespace CasterSimulator.WebAPI.Controllers
         [HttpPost]
         public IActionResult UpdateCutSchedule([FromBody] List<Product> cutSchedule)
         {
-            if (cutSchedule == null || cutSchedule.Count == 0)
-                return BadRequest("Cut schedule cannot be empty.");
-
+          
             Console.WriteLine($"Cut schedule updated - {DateTime.Now.ToLongTimeString()}");
-            foreach (var cut in cutSchedule)
+
+            if (cutSchedule != null)
             {
-                Console.WriteLine($"Product: {cut.ProductId}");
+                foreach (var cut in cutSchedule)
+                {
+                    Console.WriteLine($"Product: {cut.ProductId}");
+                }
             }
+
             _cutSchedule = cutSchedule;
             return Ok(new { Message = "Cut schedule updated successfully." });
         }

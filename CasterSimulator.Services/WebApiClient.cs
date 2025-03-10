@@ -32,7 +32,7 @@ namespace CasterSimulator.Simulator.Services
                 return false;
             }
         }
-        public async Task<bool> UpdateCutScheduleAsync(List<Product> cutSchedule)
+        public async Task<bool> UpdateCutScheduleAsync(List<Product?> cutSchedule)
         {
             try
             {

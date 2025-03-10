@@ -28,7 +28,6 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
         var result = base.TryDequeue(out item);
         if (result)
         {
-            Console.WriteLine($"CollectionChanged invoked on TryDequeue - {DateTime.Now.ToLongTimeString()}");
             CollectionChanged?.Invoke();
         }
 
@@ -37,7 +36,7 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
 
     public void ReplaceAll(IEnumerable<T> newItems)
     {
-        while (TryDequeue(out _))
+        while (base.TryDequeue(out _))
         {
         } // Clear the queue without triggering events
 

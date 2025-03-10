@@ -15,7 +15,7 @@ public class Sequence
 
     public long Id { get;}
     public ConcurrentDictionary<int,Heat> Heats = new();
-    public ObservableConcurrentQueue<Product> Products = new();
+    public ObservableConcurrentQueue<Product?> Products = new();
     public double Width { get; }
     public double Thickness { get; }
 

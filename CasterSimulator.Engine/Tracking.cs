@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices.JavaScript;
 using CasterSimulator.Common.Collections;
 using CasterSimulator.Components;
 using CasterSimulator.MES;
@@ -20,7 +21,7 @@ public class Tracking : IDisposable
     private TaskCompletionSource<bool> _castingFinishedSignal;
     public ConcurrentDictionary<int, Heat> Heats => _sequence.Heats;
     public ObservableConcurrentQueue<Product> CutProducts { get; private set; } = new();
-    public ObservableConcurrentQueue<Product> Products => _sequence.Products;
+    public ObservableConcurrentQueue<Product?> Products => _sequence.Products;
 
     private EventHandler _castingFinishedHandler;
     private EventHandler _strandAdvancedHandler;
@@ -153,25 +154,23 @@ public class Tracking : IDisposable
             
             if (Caster.Strand.Mode == StrandMode.Tailout && !_isScheduleOptimized)
             {
-                var optimizedSchedule = CutScheduler.Optimize(
+                var optimizedSchedule =CutScheduler.Optimize(
                     Caster.Strand.HeadFromMoldMeters - Caster.Strand.TailFromMoldMeters,
-                    _sequence.Products);
+                    new Queue<Product?>(_sequence.Products));
+                Console.WriteLine($"Replacing original queue - {DateTime.Now.ToLongTimeString()}");
                 _sequence.Products.ReplaceAll(optimizedSchedule);
+                Console.WriteLine($"Original queue replaced - {DateTime.Now.ToLongTimeString()}");
                 _isScheduleOptimized = true;
-                Console.WriteLine($"Schedule Optimized at {DateTime.Now.ToLongTimeString()}");
-                foreach (var p in _sequence.Products)
-                {
-                    Console.WriteLine($"Product {p.ProductId}");
-                }
-            }
-          
-            if (!_sequence.Products.TryDequeue(out var nextProduct))
-            {
-                nextProduct = new Product(Caster.Torch.NextProduct);
-                //nextProduct.CutNumber++;
             }
 
-            Console.WriteLine($"Next to cut: {nextProduct.ProductId} - {DateTime.Now.ToLongTimeString()}");
+            Console.WriteLine($"Trying to get next cut from queue - {DateTime.Now.ToLongTimeString()}");
+            if (!_sequence.Products.TryDequeue(out var nextProduct))
+            {
+                Caster.Torch.ResetNextProduct();
+                return;
+            }
+
+            Console.WriteLine($"Next to cut: {nextProduct.ProductId} - {DateTime.Now.ToLongTimeString()}. Sequence products count {_sequence.Products.Count}");
             Caster.Torch.SetNextProduct(nextProduct);
         };
 

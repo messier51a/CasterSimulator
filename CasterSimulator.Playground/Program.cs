@@ -1,4 +1,5 @@
-﻿using CasterSimulator.Components;
+﻿using CasterSimulator.Common.Collections;
+using CasterSimulator.Components;
 using CasterSimulator.Models;
 using System;
 using System.Collections.Generic;
@@ -10,16 +11,18 @@ class Program
     {
         var testResults = new List<string>(); // Store test outcomes
 
-        // Define a single list of products to be cut
-        var baseCutSchedule = new Queue<Product>();
-        baseCutSchedule.Enqueue(CreateProduct(1, 1, "P01", 15, 8, 20));
-        baseCutSchedule.Enqueue(CreateProduct(1, 2, "P02", 15, 8, 20));
-        baseCutSchedule.Enqueue(CreateProduct(1, 3, "P03", 15, 8, 20));
-        baseCutSchedule.Enqueue(CreateProduct(1, 4, "P04", 15, 8, 20));
-        baseCutSchedule.Enqueue(CreateProduct(1, 5, "P05", 15, 8, 20));
-        baseCutSchedule.Enqueue(CreateProduct(1, 6, "P06", 15, 8, 17));
+        // Define a base list of products to be cut
+        var baseCutSchedule = new List<Product?>
+        {
+            CreateProduct(1, 1, "P01", 15, 8, 20),
+            CreateProduct(1, 2, "P02", 15, 8, 20),
+            CreateProduct(1, 3, "P03", 15, 8, 20),
+            CreateProduct(1, 4, "P04", 15, 8, 20),
+            CreateProduct(1, 5, "P05", 15, 8, 20),
+            CreateProduct(1, 6, "P06", 15, 8, 17)
+        };
 
-        // Define different strand lengths with expected outcomes
+        // Define test scenarios
         var testScenarios = new List<(double steelLength, string description, int expectedCuts, double expectedSteelUsed, bool expectTailCut)>
         {
             (6.3, "Not enough steel, one slab scheduled - should cut only one slab with available steel", 1, 6.3, false),
@@ -32,26 +35,27 @@ class Program
             (33, "Remaining steel less than 4m - should adjust last cut to prevent <4m left", 2, 33, false),
             (93, "Remaining steel less than 4m - cannot adjust last cut to prevent <4m left, tail cut", 7, 93, true),
             (96, "Remaining steel more than 4m - cannot adjust last cut", 7, 96, false)
-            
         };
 
         // Run tests
         foreach (var (steelLength, description, expectedCuts, expectedSteelUsed, expectTailCut) in testScenarios)
         {
-            // Clone the base cut schedule to avoid modifying the original list
-            var cutSchedule = baseCutSchedule.Select(p => new Product(p));
+            // Clone the base cut schedule into a new ObservableConcurrentQueue for each test
+            var cutSchedule = new ObservableConcurrentQueue<Product>(baseCutSchedule.Select(p => new Product(p)));
 
             try
             {
-                var newCutSchedule = CutScheduler.Optimize(steelLength, new Queue<Product>(cutSchedule));
+                // Optimize directly (modifies the queue in place)
+                CutScheduler.Optimize(steelLength, cutSchedule);
 
-                double usedSteel = newCutSchedule.Sum(x => x.LengthAimMeters);
+                // Analyze the results
+                double usedSteel = cutSchedule.Sum(x => x.LengthAimMeters);
                 double remainingSteel = Math.Max(0, steelLength - usedSteel);
-                bool cutsMatch = newCutSchedule.Count == expectedCuts;
+                bool cutsMatch = cutSchedule.Count == expectedCuts;
                 bool steelMatch = Math.Abs(usedSteel - expectedSteelUsed) < 1e-6;
 
                 // Check if tail cut exists when expected
-                bool tailCutExists = newCutSchedule.Any(p => p.ProductId.EndsWith("TAIL"));
+                bool tailCutExists = cutSchedule.Any(p => p.ProductId.EndsWith("TAIL"));
 
                 if (cutsMatch && steelMatch && tailCutExists == expectTailCut)
                 {
@@ -60,7 +64,7 @@ class Program
                 else
                 {
                     string failMessage = $"❌ FAILED: {description} - ";
-                    if (!cutsMatch) failMessage += $"Expected {expectedCuts} cuts, but got {newCutSchedule.Count}. ";
+                    if (!cutsMatch) failMessage += $"Expected {expectedCuts} cuts, but got {cutSchedule.Count}. ";
                     if (!steelMatch) failMessage += $"Expected {expectedSteelUsed}m steel used, but got {usedSteel}m. ";
                     if (tailCutExists != expectTailCut) failMessage += $"Expected Tail Cut: {expectTailCut}, Found: {tailCutExists}.";
                     testResults.Add(failMessage);
@@ -75,9 +79,6 @@ class Program
         // Emit final test report
         Console.WriteLine("\n========== TEST SUMMARY ==========");
 
-        // Emit final test report with a table of the optimized schedule
-        Console.WriteLine("\n========== OPTIMIZED SCHEDULE DETAILS ==========");
-   
         foreach (var result in testResults)
         {
             Console.WriteLine(result);
@@ -88,8 +89,7 @@ class Program
     }
 
     // Helper method to create a product with all required properties
-    static Product CreateProduct(long sequenceId, int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
-        // Updated cut schedule with new LengthAim, LengthMin, and LengthMax
+    static Product? CreateProduct(long sequenceId, int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
     {
         return new Product(sequenceId, cutNumber, productId, lengthAim, lengthMin, lengthMax)
         {

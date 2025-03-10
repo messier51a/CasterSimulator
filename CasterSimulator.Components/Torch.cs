@@ -6,12 +6,11 @@ namespace CasterSimulator.Components
 {
     public class Torch
     {
-        private ConcurrentQueue<Product> _nextProductQueue = new();
         public double TorchLocation { get; } // Fixed position of the torch in meters
         private double _increment;
         public double MeasCutLengthMeters { get; private set; }
         public event EventHandler<Product> CutDone; // Event triggered when a product is cut
-        public Product NextProduct => _nextProductQueue.TryPeek(out var nextProduct) ? nextProduct : new Product();
+        public Product NextProduct { get; private set; }
 
         public Torch(double torchLocation)
         {
@@ -22,21 +21,23 @@ namespace CasterSimulator.Components
             _increment += increment;
             MeasCutLengthMeters = Math.Max(0, _increment - TorchLocation);
 
-            if (MeasCutLengthMeters == 0 || 
-                !_nextProductQueue.TryPeek(out var nextProduct) ||
-                MeasCutLengthMeters < nextProduct.LengthAimMeters) return;
+            if (NextProduct == null || MeasCutLengthMeters == 0 || 
+                MeasCutLengthMeters < NextProduct.LengthAimMeters) return;
 
-            if (!_nextProductQueue.TryDequeue(out nextProduct)) return;
-            
-            nextProduct.CutLength = MeasCutLengthMeters;
+            NextProduct.CutLength = MeasCutLengthMeters;
             _increment = TorchLocation;
 
-            CutDone?.Invoke(this, nextProduct);
+            CutDone?.Invoke(this, NextProduct);
         }
 
         public void SetNextProduct(Product product)
         {
-            _nextProductQueue.Enqueue(product);
+            NextProduct = product ?? throw new ArgumentNullException(nameof(product));
+        }
+        
+        public void ResetNextProduct()
+        {
+            NextProduct = null;
         }
     }
 }
