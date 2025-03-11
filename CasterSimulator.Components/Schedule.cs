@@ -27,7 +27,7 @@ public static class Schedule
         _steelDensity = steelDensity;
         var sequenceId = long.Parse(DateTime.Now.ToString("yyMMddHHmm"));
         var sequence = new Sequence(sequenceId, width, thickness, steelDensity);
-        var totalHeats = 1;//new Random().Next(3, 3);
+        var totalHeats = 3;//new Random().Next(3, 3);
         var cutCount = 1;
         var heatId = GetMinutesSince2024();
         for (var i = 0; i < totalHeats; i++)

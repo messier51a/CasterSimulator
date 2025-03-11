@@ -17,6 +17,8 @@ public class Tracking : IDisposable
     private Sequence _sequence;
 
     private bool _isScheduleOptimized;
+
+    private bool _isLastCut;
     
     private TaskCompletionSource<bool> _castingFinishedSignal;
     public ConcurrentDictionary<int, Heat> Heats => _sequence.Heats;
@@ -30,7 +32,7 @@ public class Tracking : IDisposable
     private EventHandler<int> _ladleClosedHandler;
     private EventHandler _tundishWeightThresholdHandler;
     private EventHandler<int> _tundishHeatOut;
-    private EventHandler<int> _tundishEmptyHandler;
+    private EventHandler<int> _moldEmptyHandler;
 
     public event Action? HeatStatusChanged;
 
@@ -207,13 +209,24 @@ public class Tracking : IDisposable
         
         Caster.Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Caster.Tundish.HeatOut += _tundishHeatOut;
-        Caster.Tundish.ContainerEmptied += _tundishEmptyHandler;
+        
+    }
+    
+    private void RegisterMoldEvents()
+    {
+        _moldEmptyHandler = (s, e) =>
+        {
+          
+        };
+        
+        Caster.Mold.ContainerEmptied += _moldEmptyHandler;
     }
 
     private void RegisterEvents()
     {
         RegisterCasterEvents();
         RegisterTundishEvents();
+        RegisterMoldEvents();
         RegisterStrandEvent();
         RegisterTorchEvents();
     }
@@ -227,6 +240,7 @@ public class Tracking : IDisposable
         Caster.Ladle.ContainerEmptied -= _ladleClosedHandler;
         Caster.Tundish.WeightThresholdReached -= _tundishWeightThresholdHandler;
         Caster.Tundish.HeatOut -= _tundishHeatOut;
+        Caster.Mold.ContainerEmptied -= _moldEmptyHandler;
     }
 
     public void Dispose()

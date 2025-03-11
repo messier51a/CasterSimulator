@@ -66,6 +66,7 @@ public class Caster : IDisposable
         _coolingSectionController = new CoolingSectionController(
             _configuration.CoolingSectionConfiguration.BaseFlowLps,
             _configuration.CoolingSectionConfiguration.FlowPerSpeedLps);
+        
         _coolingSectionController.StartCoolingMonitoring(CoolingSections);
 
         RegisterEvents();
@@ -111,7 +112,7 @@ public class Caster : IDisposable
         Tundish.WeightThresholdReached += _tundishWeightThresholdHandler;
         Tundish.SteelPoured += _tundishSteelPouredHandler;
     }
-    
+
     private void RegisterMoldEvents()
     {
         _moldWeightThresholdHandler = (s, e) =>
@@ -137,7 +138,7 @@ public class Caster : IDisposable
                 Mold.RemoveSteel(massFlow);
             }
 
-            Torch.Measure(Strand.CastLengthIncrement);
+            Torch.Measure(Strand.CastLengthIncrement, Strand.TailFromMoldMeters);
 
             if (Strand.TailFromMoldMeters > Torch.TorchLocation)
             {
@@ -145,7 +146,8 @@ public class Caster : IDisposable
                 CastingFinished?.Invoke(this, EventArgs.Empty);
             }
 
-            _coolingSectionController.ActivateSections(Strand.HeadFromMoldMeters, Strand.TailFromMoldMeters, Strand.CastSpeedMetersMin);
+            _coolingSectionController.ActivateSections(Strand.HeadFromMoldMeters, Strand.TailFromMoldMeters,
+                Strand.CastSpeedMetersMin);
         };
 
         Strand.Advanced += _strandAdvancedHandler;
@@ -185,7 +187,7 @@ public class Caster : IDisposable
                 Ladle.SetFlowRate(newFlowRate);
             });
     }
-    
+
     public void Dispose()
     {
         Dispose(true); // Explicit disposal

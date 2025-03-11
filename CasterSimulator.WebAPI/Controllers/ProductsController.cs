@@ -18,9 +18,6 @@ namespace CasterSimulator.WebAPI.Controllers
         [HttpPost]
         public IActionResult UpdateProducts([FromBody] List<Product> products)
         {
-            if (products == null || products.Count == 0)
-                return BadRequest("Products cannot be empty.");
-
             _products = products;
             return Ok(new { Message = "Products updated successfully." });
         }

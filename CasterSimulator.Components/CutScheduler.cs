@@ -50,23 +50,45 @@ namespace CasterSimulator.Components
 
             var idx = 1;
 
-            while (remainingSteel > cutSchedule.Sum(x => x.LengthAimMeters))
+            var cutScheduleCopy = new Queue<Product>();
+            
+            double accumulatedLength = 0;
+
+            foreach (var product in cutSchedule)
+            {
+                cutScheduleCopy.Enqueue(product);
+                accumulatedLength += product.LengthAimMeters;
+
+                if (accumulatedLength > remainingSteel)
+                    break;
+            }
+
+            while (remainingSteel > cutScheduleCopy.Sum(x => x.LengthAimMeters))
             {
                 Console.WriteLine($"Adding extra product {idx++}. Steel length: {steelInStrand}");
-                var last = cutSchedule.Last();
-                cutSchedule.Enqueue(new Product(last) { ProductId = $"{last.SequenceId}-{idx:D2}", IsPlanned = false });
+                var last = cutScheduleCopy.Last();
+                cutScheduleCopy.Enqueue(new Product(last) { ProductId = $"{last.SequenceId}-{idx:D2}", IsPlanned = false });
                 remainingSteel -= last.LengthAimMeters;
                 idx++;
+            }
+            
+            Console.WriteLine($"Pre optimized cutSchedule. Steel length: {remainingSteel}:");
+            foreach (var product in cutScheduleCopy)
+            {
+                Console.WriteLine(
+                    $"Product Id: {product.ProductId}, length aim: {product.LengthAimMeters}, length min: {product.LengthMin}, length max: {product.LengthMax}");
             }
 
             while (remainingSteel > 0)
             {
                 if (remainingSteel < 4 && optimizedSchedule.TryPeek(out var product))
                 {
+                    Console.WriteLine($"Condition 0");
                     var removeSteel = 4 - remainingSteel;
                     product.LengthAimMeters -= removeSteel;
                     optimizedSchedule.Enqueue(new Product()
                     {
+                        SequenceId = product.SequenceId,
                         ProductId = $"{product.SequenceId}-TAIL", IsPlanned = false,
                         LengthAimMeters = 4
                     });
@@ -74,12 +96,13 @@ namespace CasterSimulator.Components
                     break;
                 }
 
-                if (!cutSchedule.TryDequeue(out var nextProduct)) break;
+                if (!cutScheduleCopy.TryDequeue(out var nextProduct)) break;
 
                 optimizedSchedule.TryPeek(out var lastProduct);
 
                 if (remainingSteel >= nextProduct.LengthAimMeters)
                 {
+                    Console.WriteLine($"Condition 1");
                     optimizedSchedule.Enqueue(new Product(nextProduct));
                     remainingSteel -= nextProduct.LengthAimMeters;
                 }
@@ -87,19 +110,23 @@ namespace CasterSimulator.Components
                     switch (remainingSteel)
                     {
                         case >= 4 when remainingSteel >= nextProduct.LengthMin:
+                            Console.WriteLine($"Condition 2");
                             optimizedSchedule.Enqueue(new Product(nextProduct) { LengthAimMeters = remainingSteel });
                             remainingSteel = 0;
                             break;
                         case >= 4 when lastProduct != null &&
-                                       lastProduct.LengthMax - lastProduct.LengthAimMeters > 0:
-                            lastProduct.LengthAimMeters = lastProduct.LengthMax - lastProduct.LengthAimMeters;
+                                       lastProduct.LengthMax - lastProduct.LengthAimMeters > 0.0:
+                            Console.WriteLine($"Condition 3");
+                            lastProduct.LengthAimMeters += lastProduct.LengthMax - lastProduct.LengthAimMeters;
                             remainingSteel -= lastProduct.LengthAimMeters;
                             break;
                         case >= 4:
+                            Console.WriteLine($"Condition 4");
                             optimizedSchedule.Enqueue(new Product()
                             {
+                                SequenceId = nextProduct.SequenceId,
                                 ProductId = $"{nextProduct.SequenceId}-TAIL", IsPlanned = false,
-                                LengthAimMeters = 4
+                                LengthAimMeters = remainingSteel
                             });
                             remainingSteel = 0;
                             break;

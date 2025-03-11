@@ -18,9 +18,6 @@ namespace CasterSimulator.WebAPI.Controllers
         [HttpPost]
         public IActionResult UpdateHeatSchedule([FromBody] List<Heat> heats)
         {
-            if (heats == null || heats.Count == 0)
-                return BadRequest("Heat list cannot be empty.");
-
             _heats = heats;
             return Ok(new { Message = "Heat list updated successfully." });
         }

@@ -9,6 +9,7 @@ public class ObservableConcurrentQueue<T> : ConcurrentQueue<T>
     // Default constructor (empty queue)
     public ObservableConcurrentQueue()
     {
+        CollectionChanged?.Invoke();
     }
 
     // Constructor that initializes with a collection

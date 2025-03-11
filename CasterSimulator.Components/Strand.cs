@@ -69,6 +69,7 @@ namespace CasterSimulator.Components
             Mode = StrandMode.Idle;
             _strandMonitorSubscription?.Dispose();
             _strandMonitorSubscription = null;
+            CastSpeedMetersMin = 0;
         }
 
         public void Dispose()

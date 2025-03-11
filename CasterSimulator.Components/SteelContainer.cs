@@ -124,12 +124,14 @@ public abstract class SteelContainer(ContainerDetails containerDetails) : IDispo
 
         if (NetWeightKgs == 0)
         {
+            FlowRateKgSec = 0;
             ContainerEmptied?.Invoke(this, lastHeatId);
         }
     }
 
     public virtual void SetFlowRate(double flowRate)
     {
+        if (NetWeightKgs == 0) return;
         FlowRateKgSec = flowRate;
     }
 
