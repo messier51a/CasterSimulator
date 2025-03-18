@@ -39,7 +39,7 @@ public static class Schedule
 
             var heat = new Heat(heatId, heatName, heatWeight, _steelGrades[new Random().Next(_steelGrades.Count)].SteelGradeId);
             sequence.Heats.TryAdd(heatId, heat);
-            var productAverageLength = GetRandomProductLength(5, 8);
+            var productAverageLength = GetRandomProductLength(4, 6);
             var totalEstimatedSlabs = CalculateNumberOfSlabs(
                 heat.NetWeight,
                 width,

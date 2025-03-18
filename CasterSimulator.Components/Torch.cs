@@ -13,6 +13,8 @@ namespace CasterSimulator.Components
         public Product NextProduct { get; private set; }
 
         private bool _isLastCut;
+        
+        private bool _optimizationInProgress;
 
         public Torch(double torchLocation)
         {
@@ -22,6 +24,8 @@ namespace CasterSimulator.Components
         public void Measure(double increment, double tailPosition)
         {
             _increment += increment;
+
+            if (_optimizationInProgress) return;
 
             if (_isLastCut && tailPosition <= TorchLocation) return;
             
@@ -40,6 +44,11 @@ namespace CasterSimulator.Components
         {
             _isLastCut = isLastCut;
             NextProduct = product ?? throw new ArgumentNullException(nameof(product));
+        }
+
+        public void SetOptimizationInProgress(bool optimizationInProgress)
+        {
+            _optimizationInProgress = optimizationInProgress;
         }
 
         public void ResetNextProduct()

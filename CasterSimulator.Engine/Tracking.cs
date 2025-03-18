@@ -116,7 +116,10 @@ public class Tracking : IDisposable
 
     private void RegisterCasterEvents()
     {
-        _castingFinishedHandler = (s, e) => { _castingFinishedSignal.TrySetResult(true); };
+        _castingFinishedHandler = (s, e) =>
+        {
+            _castingFinishedSignal.TrySetResult(true);
+        };
         Caster.CastingFinished += _castingFinishedHandler;
     }
 
