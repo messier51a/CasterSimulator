@@ -220,13 +220,14 @@ A Grafana Live dashboard provides real-time visualization of the casting process
 ## System Requirements
 
 - Developed and tested under macOS Sonoma 14.1
-- Should be compatible with other macOS versions and Windows that support .NET 8.0.
+- Should be compatible with Windows and other macOS versions that support .NET 8.0.
 - Docker Desktop
 - Visual Studio 2022, Visual Studio Code or JetBrains Rider.
-
+- Git
+  
 ## Installation Steps
 
-### Change into the project directory:
+### Clone this repository and change into the project directory:
 
 ```sh
 cd CasterSimulator
