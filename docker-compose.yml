@@ -1,0 +1,23 @@
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics
+    container_name: victoriametrics
+    volumes:
+      - victoriametrics-storage:/victoria-metrics-data
+    ports:
+      - "8428:8428"  # VictoriaMetrics Web UI & API
+      - "8429:8429"  # VictoriaMetrics Monitoring
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - victoriametrics
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+volumes:
+  victoriametrics-storage:
+  grafana-storage:
