@@ -69,7 +69,7 @@ Implements rules to maximize material utilization when cutting products from the
 - Prevent cuts less than 4 meters to avoid issues with rolling table handling
 - Dynamically optimize the remaining schedule when nearing the end of a sequence
 
-## Detailed Component Breakdown
+## Components
 
 ### Turret
 A rotating platform that holds multiple ladles and positions them for sequential casting.
