@@ -286,5 +286,6 @@ To access Grafana UI go to http://localhost:3000
 - Refine steel flow models
 - Expand API capabilities
 - Implement OPC UA interface
-- Create additional Grafana dashboards for historical data analysis using VictoriaMetrics
+- Create additional Grafana dashboards for historical data analysis.
+- Refactor and clean up.
 
