@@ -254,7 +254,7 @@ docker-compose up -d
 
 ### Start the Web API
 
-The Web API provides essential services for the Caster Simulator:
+The Web API provides essential services for the Caster Simulator and should run first.
 
 ```sh
 dotnet run --project CasterSimulator.WebAPI
