@@ -237,38 +237,58 @@ System Requirements
 - Docker Desktop
 - Visual Studio 2022, Visual Studio Code or JetBrains Rider.
 
-## Installation & Setup
+# CasterSimulator Installation Guide
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/your-repo/caster-simulator.git
-   ```
+## Installation Steps
 
-2. Navigate to the project directory:
-   ```sh
-   cd caster-simulator
-   ```
+### 1. Navigate to Project Directory
 
-3. Install dependencies:
-   ```sh
-   dotnet restore
-   ```
+Change into the project directory:
 
-4. Start the Web API:
-   ```sh
-   dotnet run --project CasterSimulator.WebAPI
-   ```
-   - The Web API provides REST endpoints for:
-     * Product management
-     * Heat scheduling
-     * Cut scheduling
-   - Runs on `http://localhost:5000` by default
-   - Configured with CORS to allow Grafana access
+```sh
+cd CasterSimulator
+```
 
-5. Run the simulator:
-   ```sh
-   dotnet run
-   ```
+### 2. Install Dependencies
+
+Restore the project dependencies using the .NET CLI:
+
+```sh
+dotnet restore
+```
+
+### Start Monitoring Services
+
+The project includes a `docker-compose.yml` file to set up VictoriaMetrics and Grafana, adjust port numbers paths for prsistent storage if necessary.
+
+```sh
+# Start the monitoring services
+docker-compose up -d
+```
+
+## Running the Application
+
+### Start the Web API
+
+The Web API provides essential services for the Caster Simulator:
+
+```sh
+dotnet run --project CasterSimulator.WebAPI
+```
+
+Test access to the REST API with swagger:
+
+http://localhost:5087/swagger
+
+### Run the Simulator
+
+To start the main simulator application:
+
+```sh
+dotnet run --project CasterSimulator.Engine
+```
+- Configure Grafana data sources and dashboards as needed
+
 ## Future Development Plans
 
 - Complete VictoriaMetrics integration
