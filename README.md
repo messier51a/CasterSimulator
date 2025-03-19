@@ -196,19 +196,6 @@ A Grafana Live dashboard provides real-time visualization of the casting process
 - Cut ID details
 - Product specifications
 - Length measurements
- 
-## Grafana Integration
-
-- Live streaming data via InfluxDB line protocol
-- REST API data access with Infinity Plugin
-- Preconfigured dashboard templates
-
-### Available Metrics
-- Ladle weight and flow rate
-- Tundish weight, temperature, and flow rates
-- Mold level and steel flow rates
-- Cast speed and total cast length
-- Heat schedule and product tracking
 
 ## REST API Endpoints
 
@@ -230,7 +217,7 @@ A Grafana Live dashboard provides real-time visualization of the casting process
 - **User Interface Testing**: Validating industrial dashboards in Grafana
 - **Data Integration & Analysis**: Real-time and historical data visualization
 
-System Requirements
+## System Requirements
 
 - Developed and tested under macOS Sonoma 14.1
 - Should be compatible with other macOS versions and Windows that support .NET 8.0.
