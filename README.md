@@ -1,4 +1,4 @@
-# Caster Simulator
+# Caster Simulator with Grafana Visualization
 
 ![screenshot](grafana-dash-caster-overview.png)
 
