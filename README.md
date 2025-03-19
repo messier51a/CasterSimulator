@@ -279,6 +279,22 @@ The logic to generate heats and products can be found in CasterSimulator.Compone
 
 To access Grafana UI go to http://localhost:3000
 
+### Create an Access Token
+
+In Grafana, navigate to Home - Administration - Users and access - Service Accounts.
+
+Create a new service account token and add it to GrafanaLiveToken field in the configuration.json file.
+
+### Create an Inifinity data source.
+
+Add a new Infinity data source and set the authentication to No Auth.
+
+### Import Caster Overview Dashboard.
+
+In Grafana, Home - Dashboards - New, load the grafana-dash-caster-overview.json file provided in this repository.
+
+This dashboard was designed for a 3840x2160 display.
+
 ## Future Development Plans
 
 - Complete VictoriaMetrics integration
@@ -286,5 +302,6 @@ To access Grafana UI go to http://localhost:3000
 - Refine steel flow models
 - Expand API capabilities
 - Implement OPC UA interface
-- Create additional Grafana dashboards for historical data analysis using VictoriaMetrics
+- Create additional Grafana dashboards for historical data analysis.
+- Refactor and clean up.
 
