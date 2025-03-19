@@ -116,6 +116,67 @@ Ensures smooth acceleration and steady-state speed:
 - Implements a linear ramping function
 - Gradually increases speed from start to target
 
+## Project Configuration Files
+
+### Steel Grades Configuration (`steel_grades.json`)
+
+The `steel_grades.json` file is a foundational resource for future advanced simulation capabilities, designed to support:
+
+- **Steel Mixing Rules**: Precise modeling of heat transitions and mixed steel behavior
+- **Adaptive Cooling Practices**: Customized cooling strategies based on specific steel grade properties
+- **Dynamic Cast Speed Ramping**: Optimizing casting speed according to steel grade characteristics
+- **Metallurgical Modeling**: Enabling more sophisticated simulation of steel production processes
+
+Currently, the file contains a comprehensive list of steel grades with detailed information:
+
+- **SteelGradeId**: Unique identifier for the steel grade
+- **SteelGradeGroup**: Classification group (e.g., HC: High Carbon, LC: Low Carbon, ULC: Ultra Low Carbon)
+- **LiquidusTemperatureC**: Melting point temperature in Celsius
+- **Description**: Detailed description of the steel grade
+- **TargetSuperheatC**: Target temperature above the liquidus point
+- **Chemistry**: Detailed chemical composition, including:
+    - Element names (C, Mn, Si, P, S, Cr, Ni, etc.)
+    - Percentage of each element
+
+Supported steel grades include:
+- Austenitic Stainless Steels (301, 304, 316, 321)
+- Martensitic Stainless Steels (410, 420)
+- Ferritic Stainless Steel (430)
+- Duplex Stainless Steels (2205, 2507)
+
+The file is structured to facilitate future enhancements in:
+- Grade-specific casting parameters
+- Metallurgical transition modeling
+- Advanced process control simulations
+
+### Simulator Configuration (`configuration.json`)
+
+The `configuration.json` file defines critical parameters for the continuous casting simulation:
+
+#### Tundish and Pouring Parameters
+- **TundishWeightFluctuationTolerance**: Maximum allowable weight variation
+- **TundishWeightCorrectionFactor**: Factor for weight adjustments
+- **MaxTundishWeight**: Maximum weight capacity
+- **LowPouringRate** and **HighPouringRate**: Minimum and maximum pouring rates
+- **SteadyStateRate**: Optimal pouring rate
+
+#### Casting Speed Parameters
+- **TargetCastSpeed**: Desired casting speed
+- **SpeedRampDuration**: Time to reach target speed
+- **RampUpThreshold**: Weight threshold for speed ramp-up
+
+#### Physical Properties
+- **SteelDensity**: Density of steel
+- **TorchLocation**: Location of cutting torch
+
+#### Cooling Section Configuration
+Detailed configuration for 12 cooling sections, including:
+- Start and end positions
+- Nozzle types and positions
+- Flow rate calculations based on casting speed
+
+These configuration files allow for flexible and detailed simulation of the continuous casting process, enabling users to model various steel grades and casting conditions.
+
 ## Grafana Dashboard
 
 A comprehensive dashboard provides real-time visualization of the entire casting process, including:
@@ -202,27 +263,6 @@ A comprehensive dashboard provides real-time visualization of the entire casting
    dotnet run
    ```
 
-## Web API Endpoints
-
-The simulator provides the following REST API endpoints:
-
-- **Products**
-  - `GET /api/products`: Retrieve product data
-  - `POST /api/products`: Update product data
-
-- **Heat Schedule**
-  - `GET /api/heatschedule`: Retrieve current heat schedule
-  - `POST /api/heatschedule`: Update heat schedule
-
-- **Cut Schedule**
-  - `GET /api/cutschedule`: Retrieve scheduled cuts
-  - `POST /api/cutschedule`: Update cut schedule
-
-### API Features
-- CORS enabled for Grafana integration
-- Swagger documentation available in development mode
-- In-memory data storage for simplified testing
-
 ## Grafana Integration
 
 - Live streaming data via InfluxDB line protocol
@@ -258,63 +298,3 @@ The simulator provides the following REST API endpoints:
 - Implement OPC UA interface
 - Create additional Grafana dashboards for historical data analysis using VictoriaMetrics
 
-## Project Configuration Files
-
-### Steel Grades Configuration (`steel_grades.json`)
-
-The `steel_grades.json` file is a foundational resource for future advanced simulation capabilities, designed to support:
-
-- **Steel Mixing Rules**: Precise modeling of heat transitions and mixed steel behavior
-- **Adaptive Cooling Practices**: Customized cooling strategies based on specific steel grade properties
-- **Dynamic Cast Speed Ramping**: Optimizing casting speed according to steel grade characteristics
-- **Metallurgical Modeling**: Enabling more sophisticated simulation of steel production processes
-
-Currently, the file contains a comprehensive list of steel grades with detailed information:
-
-- **SteelGradeId**: Unique identifier for the steel grade
-- **SteelGradeGroup**: Classification group (e.g., HC: High Carbon, LC: Low Carbon, ULC: Ultra Low Carbon)
-- **LiquidusTemperatureC**: Melting point temperature in Celsius
-- **Description**: Detailed description of the steel grade
-- **TargetSuperheatC**: Target temperature above the liquidus point
-- **Chemistry**: Detailed chemical composition, including:
-  - Element names (C, Mn, Si, P, S, Cr, Ni, etc.)
-  - Percentage of each element
-
-Supported steel grades include:
-- Austenitic Stainless Steels (301, 304, 316, 321)
-- Martensitic Stainless Steels (410, 420)
-- Ferritic Stainless Steel (430)
-- Duplex Stainless Steels (2205, 2507)
-
-The file is structured to facilitate future enhancements in:
-- Grade-specific casting parameters
-- Metallurgical transition modeling
-- Advanced process control simulations
-
-### Simulator Configuration (`configuration.json`)
-
-The `configuration.json` file defines critical parameters for the continuous casting simulation:
-
-#### Tundish and Pouring Parameters
-- **TundishWeightFluctuationTolerance**: Maximum allowable weight variation
-- **TundishWeightCorrectionFactor**: Factor for weight adjustments
-- **MaxTundishWeight**: Maximum weight capacity
-- **LowPouringRate** and **HighPouringRate**: Minimum and maximum pouring rates
-- **SteadyStateRate**: Optimal pouring rate
-
-#### Casting Speed Parameters
-- **TargetCastSpeed**: Desired casting speed
-- **SpeedRampDuration**: Time to reach target speed
-- **RampUpThreshold**: Weight threshold for speed ramp-up
-
-#### Physical Properties
-- **SteelDensity**: Density of steel
-- **TorchLocation**: Location of cutting torch
-
-#### Cooling Section Configuration
-Detailed configuration for 12 cooling sections, including:
-- Start and end positions
-- Nozzle types and positions
-- Flow rate calculations based on casting speed
-
-These configuration files allow for flexible and detailed simulation of the continuous casting process, enabling users to model various steel grades and casting conditions.
