@@ -33,19 +33,13 @@ Steel is a fundamental material used across multiple industries:
 
 ## Overview of the Caster Simulator
 
-The Caster Simulator is an educational and research-oriented tool designed to partially replicate the behavior of a **Continuous Casting Machine (CCM)**. It simulates key components and processes rather than the entire complexity of a real CCM. It is not a Digital Twin but could be adapted into one. The simulator models key components of a CCM, tracking steel flow from the **ladle**, through the **tundish**, **mold**, and **strand**, until it is cut into finished slabs by the **torch**.
+The Caster Simulator is an educational and research-oriented tool designed to partially replicate the behavior of a **Continuous Casting Machine (CCM)**. It is not a Digital Twin but could be adapted into one. The simulator models key components of a CCM, tracking steel flow from the **ladle**, through the **tundish**, **mold**, and **strand**, until it is cut into finished slabs by the **torch**.
 
 ### Simulation Scope
 
-A real continuous casting machine is highly complex from a control and automation perspective. This simulator does not attempt to fully replicate the complexity of an actual CCM. Instead, it uses **simplified algorithms** to generate **semi-realistic data** that can be used for educational purposes, UI testing, and research into casting behavior and data visualization.
+A real CCM is highly complex from a control and automation perspective. This simulator does not attempt to fully replicate the complexity of an actual CCM. Instead, it uses **simplified algorithms** to generate **semi-realistic data** that can be used for educational purposes, UI testing, and research into casting behavior and data visualization.
 
 ## Features and Components
-
-### Key Technical Features
-
-- **Live Metrics Streaming**: Provides real-time data using **InfluxDB line protocol**.
-- **Time Series Data Streaming**: Streams time series metrics to **VictoriaMetrics** for long-term analysis.
-- **REST API**: Supports structured data retrieval via API calls.
 
 ### Mixed Steel Tracking
 
