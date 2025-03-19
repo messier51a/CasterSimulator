@@ -1,5 +1,7 @@
 # Caster Simulator
 
+![screenshot](grafana-dash-caster-overview.png)
+
 ## What is a Continuous Casting Machine?
 
 A **Continuous Casting Machine (CCM)** is a key part of modern steel production. It transforms molten steel into solidified slabs, billets, or blooms by continuously pouring liquid steel into a mold while it is simultaneously withdrawn and cooled. The process eliminates the need for ingot casting (an older method where molten steel is poured into stationary molds called ingots, allowed to solidify completely, then reheated before further processing) and improves efficiency by reducing waste and improving product quality. Continuous casting creates a non-stop flow from liquid to solid state, whereas ingot casting requires multiple separate steps with cooling and reheating.
