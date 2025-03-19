@@ -250,7 +250,7 @@ The project includes a `docker-compose.yml` file to set up VictoriaMetrics and G
 docker-compose up -d
 ```
 
-## Running the Application
+## Running the Caster Simulator
 
 ### Start the Web API
 
@@ -271,7 +271,13 @@ To start the main simulator application:
 ```sh
 dotnet run --project CasterSimulator.Engine
 ```
-- Configure Grafana data sources and dashboards as needed
+This should immediately start a new steel casting sequence, which is composed of a series of heats and products.
+
+The logic to generate heats and products can be found in CasterSimulator.Components - Sequence.cs.
+
+## Visualizing the casting process with Grafana.
+
+To access Grafana UI go to http://localhost:3000
 
 ## Future Development Plans
 
