@@ -224,19 +224,15 @@ A Grafana Live dashboard provides real-time visualization of the casting process
 - Docker Desktop
 - Visual Studio 2022, Visual Studio Code or JetBrains Rider.
 
-# CasterSimulator Installation Guide
-
 ## Installation Steps
 
-### 1. Navigate to Project Directory
-
-Change into the project directory:
+### Change into the project directory:
 
 ```sh
 cd CasterSimulator
 ```
 
-### 2. Install Dependencies
+### Install Dependencies
 
 Restore the project dependencies using the .NET CLI:
 
