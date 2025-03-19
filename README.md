@@ -243,7 +243,7 @@ dotnet restore
 
 ### Start Monitoring Services
 
-The project includes a `docker-compose.yml` file to set up VictoriaMetrics and Grafana, adjust port numbers paths for prsistent storage if necessary.
+The project includes a `docker-compose.yml` file to set up VictoriaMetrics and Grafana, adjust port numbers and paths for persistent storage if necessary.
 
 ```sh
 # Start the monitoring services
