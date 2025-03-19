@@ -1,12 +1,16 @@
 using System.Collections.Concurrent;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Text.Json;
 using CasterSimulator.Components;
 using CasterSimulator.Models;
 
 namespace CasterSimulator.Engine;
 
+/// <summary>
+/// Represents a continuous casting machine (CCM) that transforms molten steel into solid slabs.
+/// Manages the interaction between various components including the turret, ladle, tundish, mold, strand, and torch.
+/// Also controls the flow rates between components and monitors cooling sections.
+/// </summary>
 public class Caster : IDisposable
 {
     private bool _disposed;
@@ -15,18 +19,48 @@ public class Caster : IDisposable
     private IDisposable? _ladleFlowRateSubscription;
     private IDisposable _tundishFlowRateSubscription;
     private CoolingSectionController _coolingSectionController;
+
+    /// <summary>
+    /// Gets the turret component that holds and rotates ladles into casting position.
+    /// </summary>
     public Turret Turret { get; private set; }
+
+    /// <summary>
+    /// Gets the tundish component that acts as an intermediate reservoir between the ladle and mold.
+    /// </summary>
     public Tundish Tundish { get; private set; }
+
+    /// <summary>
+    /// Gets the mold component that shapes the initial solidification of the steel strand.
+    /// </summary>
     public Mold Mold { get; private set; }
+
+    /// <summary>
+    /// Gets the strand component that represents the continuous steel product being cast.
+    /// </summary>
     public Strand Strand { get; private set; }
+
+    /// <summary>
+    /// Gets the torch component that cuts the strand into finished products.
+    /// </summary>
     public Torch Torch { get; private set; }
 
+    /// <summary>
+    /// Gets the collection of cooling sections that control the solidification process along the strand path.
+    /// </summary>
     public ConcurrentDictionary<int, CoolingSection> CoolingSections { get; private set; }
+
+    /// <summary>
+    /// Gets the ladle currently in the casting position on the turret.
+    /// </summary>
     public Ladle Ladle => Turret.LadleInCastPosition;
 
 
     private double _previousTundishWeight;
 
+    /// <summary>
+    /// Event that fires when the casting process is complete.
+    /// </summary>
     public event EventHandler? CastingFinished;
 
     private Action<HeatMin> _ladleSteelPouredHandler;
@@ -40,13 +74,8 @@ public class Caster : IDisposable
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Caster"/> class, representing the continuous casting machine (CCM).
+    /// Loads configuration from a JSON file and initializes all components of the casting system.
     /// </summary>
-    /// <param name="configuration">The configuration settings for the CCM. Cannot be null.</param>
-    /// <param name="tundish">The tundish used in the casting process. Cannot be null.</param>
-    /// <param name="mold">The mold used for shaping the strand. Cannot be null.</param>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="configuration"/>, <paramref name="tundish"/>, or <paramref name="mold"/> is null.
-    /// </exception>
     public Caster()
     {
         var filePath = Path.Combine(Environment.CurrentDirectory, "configuration.json");
@@ -66,12 +95,15 @@ public class Caster : IDisposable
         _coolingSectionController = new CoolingSectionController(
             _configuration.CoolingSectionConfiguration.BaseFlowLps,
             _configuration.CoolingSectionConfiguration.FlowPerSpeedLps);
-        
+
         _coolingSectionController.StartCoolingMonitoring(CoolingSections);
 
         RegisterEvents();
     }
 
+    /// <summary>
+    /// Registers all event handlers for the various components of the casting system.
+    /// </summary>
     private void RegisterEvents()
     {
         RegisterTurretEvents();
@@ -81,7 +113,9 @@ public class Caster : IDisposable
         RegisterTorchEvents();
     }
 
-
+    /// <summary>
+    /// Registers event handlers for the turret component.
+    /// </summary>
     private void RegisterTurretEvents()
     {
         _turretRotatedHandler = (s, e) =>
@@ -92,6 +126,10 @@ public class Caster : IDisposable
         Turret.Rotated += _turretRotatedHandler;
     }
 
+    /// <summary>
+    /// Registers event handlers for the ladle currently in casting position.
+    /// Establishes the connection between the ladle and tundish for steel flow.
+    /// </summary>
     private void RegisterLadleEvents()
     {
         if (_ladleSteelPouredHandler is not null) Ladle.SteelPoured -= _ladleSteelPouredHandler;
@@ -99,6 +137,10 @@ public class Caster : IDisposable
         Ladle.SteelPoured += _ladleSteelPouredHandler;
     }
 
+    /// <summary>
+    /// Registers event handlers for the tundish component.
+    /// Establishes the connection between the tundish and mold for steel flow.
+    /// </summary>
     private void RegisterTundishEvents()
     {
         _tundishWeightThresholdHandler = (s, e) =>
@@ -113,6 +155,10 @@ public class Caster : IDisposable
         Tundish.SteelPoured += _tundishSteelPouredHandler;
     }
 
+    /// <summary>
+    /// Registers event handlers for the mold component.
+    /// Controls strand movement based on mold conditions.
+    /// </summary>
     private void RegisterMoldEvents()
     {
         _moldWeightThresholdHandler = (s, e) =>
@@ -127,6 +173,10 @@ public class Caster : IDisposable
         Mold.ContainerEmptied += _moldEmptyHandler;
     }
 
+    /// <summary>
+    /// Registers event handlers for the strand component.
+    /// Manages steel removal from the mold, torch measurements, and cooling section activation.
+    /// </summary>
     private void RegisterStrandEvent()
     {
         _strandAdvancedHandler = (s, e) =>
@@ -153,6 +203,10 @@ public class Caster : IDisposable
         Strand.Advanced += _strandAdvancedHandler;
     }
 
+    /// <summary>
+    /// Registers event handlers for the torch component.
+    /// Updates strand position when a cut is made.
+    /// </summary>
     private void RegisterTorchEvents()
     {
         _torchCutDoneHandler = (s, e) => { Strand.HeadFromMoldMeters = Torch.TorchLocation; };
@@ -160,6 +214,10 @@ public class Caster : IDisposable
         Torch.CutDone += _torchCutDoneHandler;
     }
 
+    /// <summary>
+    /// Sets up a subscription to adjust the tundish flow rate based on mold level.
+    /// Runs periodically until the tundish is empty.
+    /// </summary>
     private void AdjustTundishFlowRate()
     {
         Console.WriteLine("Tundish threshold reached, starting flow rate adjustment...");
@@ -175,6 +233,10 @@ public class Caster : IDisposable
             });
     }
 
+    /// <summary>
+    /// Sets up a subscription to adjust the ladle flow rate based on tundish level.
+    /// Runs periodically until the tundish is empty.
+    /// </summary>
     private void AdjustLadleFlowRate()
     {
         _ladleFlowRateSubscription = Observable.Interval(TimeSpan.FromSeconds(1))
@@ -188,6 +250,9 @@ public class Caster : IDisposable
             });
     }
 
+    /// <summary>
+    /// Disposes of resources used by the Caster and its components.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true); // Explicit disposal

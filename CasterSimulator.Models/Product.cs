@@ -5,7 +5,8 @@ namespace CasterSimulator.Models
     public class Product
     {
         public long SequenceId { get; set; }
-        //public int CutNumber { get; set; }
+        
+        public int CutNumber { get; set; }
         public string ProductId { get; set; }
         public ProductType ProductType { get; set; } = ProductType.Slab;
 
@@ -29,7 +30,7 @@ namespace CasterSimulator.Models
         public Product(long sequenceId,int cutNumber, string productId, double lengthAim, double lengthMin, double lengthMax)
         {
             SequenceId = sequenceId;
-            //CutNumber = cutNumber;
+            CutNumber = cutNumber;
             ProductId = productId ?? throw new ArgumentNullException(nameof(productId));
             LengthAimMeters = lengthAim > 0 ? lengthAim : throw new ArgumentException("Product length must be positive.", nameof(lengthAim));
             LengthMax = lengthMax > 0 ? lengthMax : throw new ArgumentException("Product length must be positive.", nameof(lengthMax));
@@ -41,6 +42,7 @@ namespace CasterSimulator.Models
         public Product (Product? product)
         {
             SequenceId = product.SequenceId;
+            CutNumber = product.CutNumber;
             ProductId = product.ProductId;
             ProductType = product.ProductType;
             IsPlanned = product.IsPlanned;
