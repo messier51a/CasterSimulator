@@ -144,11 +144,6 @@ Supported steel grades include:
 - Ferritic Stainless Steel (430)
 - Duplex Stainless Steels (2205, 2507)
 
-The file is structured to facilitate future enhancements in:
-- Grade-specific casting parameters
-- Metallurgical transition modeling
-- Advanced process control simulations
-
 ### Simulator Configuration (`configuration.json`)
 
 The `configuration.json` file defines critical parameters for the continuous casting simulation:
@@ -175,11 +170,9 @@ Detailed configuration for 12 cooling sections, including:
 - Nozzle types and positions
 - Flow rate calculations based on casting speed
 
-These configuration files allow for flexible and detailed simulation of the continuous casting process, enabling users to model various steel grades and casting conditions.
-
 ## Grafana Dashboard
 
-A comprehensive dashboard provides real-time visualization of the entire casting process, including:
+A Grafana Live dashboard provides real-time visualization of the casting process, including:
 
 ### Heat Information
 - Heat ID, Name, Grade, Status
@@ -209,6 +202,19 @@ A comprehensive dashboard provides real-time visualization of the entire casting
 - Cut ID details
 - Product specifications
 - Length measurements
+ 
+## Grafana Integration
+
+- Live streaming data via InfluxDB line protocol
+- REST API data access with Infinity Plugin
+- Preconfigured dashboard templates
+
+### Available Metrics
+- Ladle weight and flow rate
+- Tundish weight, temperature, and flow rates
+- Mold level and steel flow rates
+- Cast speed and total cast length
+- Heat schedule and product tracking
 
 ## REST API Endpoints
 
@@ -262,33 +268,6 @@ A comprehensive dashboard provides real-time visualization of the entire casting
    ```sh
    dotnet run
    ```
-
-## Grafana Integration
-
-- Live streaming data via InfluxDB line protocol
-- REST API data access with Infinity Plugin
-- Preconfigured dashboard templates
-
-### Available Metrics
-- Ladle weight and flow rate
-- Tundish weight, temperature, and flow rates
-- Mold level and steel flow rates
-- Cast speed and total cast length
-- Heat schedule and product tracking
-
-## Technical Overview
-
-### Data Interfaces
-- REST API
-- VictoriaMetrics (Planned)
-- InfluxDB Protocol
-
-### Controllers
-- Cooling Section Controller
-- Flow Controller
-- Speed Controller
-- Live Data Sender
-
 ## Future Development Plans
 
 - Complete VictoriaMetrics integration
