@@ -1,8 +1,7 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 using CasterSimulator.Models;
 
-namespace CasterSimulator.MES;
+namespace CasterSimulator.Components;
 
 /// <summary>
 /// Static class that provides scheduling functionality for the casting process.

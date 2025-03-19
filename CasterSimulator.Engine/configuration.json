@@ -1,4 +1,7 @@
 {
+  "GrafanaLiveUrl": "http://localhost:3000/api/live/push",
+  "GrafanaLiveToken": "glsa_2fhbu1izgcxGkzjZO93ceJfMrLVtWPhf_771b924f",
+  "WebApiUrl": "http://localhost:5087",
   "TundishWeightFluctuationTolerance": 2000.0,
   "TundishWeightCorrectionFactor": 0.05,
   "MaxTundishWeight": 22000.0,

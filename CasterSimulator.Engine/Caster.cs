@@ -78,10 +78,7 @@ public class Caster : IDisposable
     /// </summary>
     public Caster()
     {
-        var filePath = Path.Combine(Environment.CurrentDirectory, "configuration.json");
-        var configurationJson = File.ReadAllText(filePath);
-        _configuration = JsonSerializer.Deserialize<Configuration>(configurationJson);
-
+        _configuration = Configuration.Instance;
         CoolingSections =
             new ConcurrentDictionary<int, CoolingSection>(
                 _configuration.CoolingSectionConfiguration.Sections.ToDictionary(x => x.Id));

@@ -19,11 +19,10 @@ namespace CasterSimulator
     {
         static async Task Main(string[] args)
         {
-            var _url = "http://localhost:3000/api/live/push";
-            var _token = "glsa_2fhbu1izgcxGkzjZO93ceJfMrLVtWPhf_771b924f"; // Replace this
-            using var casterChannel = new LiveDataChannel("caster", _url, _token);
-
-            var apiClient = new WebApiClient("http://localhost:5087");
+            
+            var configuration = Configuration.Instance;
+            using var casterChannel = new LiveDataChannel("caster", configuration.GrafanaLiveUrl, configuration.GrafanaLiveToken);
+            var apiClient = new WebApiClient(configuration.WebApiUrl);
             var overviewSignals = casterChannel.GetSignals("overview");
 
             Console.WriteLine("=== Steel Casting Simulation ===");
@@ -31,7 +30,7 @@ namespace CasterSimulator
             try
             {
                 // Retrieve sequence and initialize simulation engine
-                var sequence = MES.Schedule.GetSquence(1.56d, 0.103d, 7850);
+                var sequence = Schedule.GetSquence(1.56d, 0.103d, 7850);
                 Console.WriteLine($"Total heats {sequence.Heats.Count}");
                 using var tracking = new Tracking(sequence);
 
