@@ -11,11 +11,12 @@ public class Heat
     public int Id { get; set; } // Unique identifier for the heat
     public string Name { get; set; }
     public double NetWeight { get; set; } // Weight of the heat in kg
-    
-    public DateTime TapTime { get; set; } // Time when the heat was tapped from the furnace
-    public DateTime? HeatOpenTimeUtc { get; set; } = DateTime.MinValue;// Time when the heat started casting
-    public DateTime? HeatCloseTimeUtc { get; set; }  = DateTime.MinValue;// Time when the heat finished casting
 
+    public DateTime TapTime { get; set; } // Time when the heat was tapped from the furnace
+    public DateTime? HeatOpenTimeUtc { get; set; } = DateTime.MinValue; // Time when the heat started casting
+    public string HeatOpenTimeUtcStr => HeatOpenTimeUtc.HasValue ? HeatOpenTimeUtc.Value.ToString("g") : "";
+    public DateTime? HeatCloseTimeUtc { get; set; } = DateTime.MinValue; // Time when the heat finished casting
+    public string HeatCloseTimeUtcStr => HeatCloseTimeUtc.HasValue ? HeatCloseTimeUtc.Value.ToString("g") : "";
     public DateTime? HeatCastingTimeUtc { get; set; } = DateTime.MinValue; // Time when the heat finished casting
     public double CastLengthAtStartMeters { get; set; }
     public string SteelGradeId { get; set; } // Identifier for the steel grade
@@ -34,4 +35,3 @@ public class Heat
         SteelGradeId = gradeId ?? throw new ArgumentNullException(nameof(gradeId));
     }
 }
-
