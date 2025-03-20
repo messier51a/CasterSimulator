@@ -33,7 +33,7 @@ Steel is a fundamental material used across multiple industries:
 - **Energy**: Pipeline steel, turbine components, and offshore structures.
 - **Shipbuilding**: Heavy-duty steel plates for hulls and decks.
 
-## Overview of the CasterSimulator
+## CasterSimulator
 
 CasterSimulator is an educational and research-oriented tool developed in C# (.NET 8.0) designed to partially replicate the behavior of a **Continuous Casting Machine (CCM)**. It is not a Digital Twin but could be adapted into one. The simulator models key components of a CCM, tracking steel flow from the **ladle**, through the **tundish**, **mold**, and **strand**, until it is cut into finished products.
 
