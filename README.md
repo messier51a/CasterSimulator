@@ -1,6 +1,6 @@
 # Caster Simulator with Grafana Visualization
 
-
+![screenshot](grafana-dash-caster-overview.png)
 
 ## What is a Continuous Casting Machine?
 
