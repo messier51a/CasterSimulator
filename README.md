@@ -252,7 +252,7 @@ The project includes a `docker-compose.yml` file to set up VictoriaMetrics and G
 docker-compose up -d
 ```
 
-## Running the Caster Simulator
+## Running CasterSimulator
 
 ### Start the Web API
 
