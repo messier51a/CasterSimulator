@@ -35,7 +35,7 @@ Steel is a fundamental material used across multiple industries:
 
 ## Overview of the Caster Simulator
 
-The Caster Simulator is an educational and research-oriented tool developed in C# (.NET 8.0) designed to partially replicate the behavior of a **Continuous Casting Machine (CCM)**. It is not a Digital Twin but could be adapted into one. The simulator models key components of a CCM, tracking steel flow from the **ladle**, through the **tundish**, **mold**, and **strand**, until it is cut into finished slabs by the **torch**.
+The Caster Simulator is an educational and research-oriented tool developed in C# (.NET 8.0) designed to partially replicate the behavior of a **Continuous Casting Machine (CCM)**. It is not a Digital Twin but could be adapted into one. The simulator models key components of a CCM, tracking steel flow from the **ladle**, through the **tundish**, **mold**, and **strand**, until it is cut into finished products.
 
 ### Simulation Scope
 
