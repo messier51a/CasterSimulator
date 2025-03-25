@@ -41,6 +41,8 @@ CasterSimulator is an educational and research-oriented tool developed in C# (.N
 
 A real CCM is highly complex from a control and automation perspective. This simulator does not attempt to fully replicate the complexity of an actual CCM. Instead, it uses **simplified algorithms** to generate **semi-realistic data** that can be used for educational purposes, UI testing, and research into casting behavior and data visualization.
 
+![screenshot](caster-simulator-system-overview.png)
+
 ## Features and Components
 
 ### Mixed Steel Tracking
