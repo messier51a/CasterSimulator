@@ -6,6 +6,10 @@
 
 A **Continuous Casting Machine (CCM)** is a key part of modern steel production. It transforms molten steel into solidified slabs, billets, or blooms by continuously pouring liquid steel into a mold while it is simultaneously withdrawn and cooled. The process eliminates the need for ingot casting (an older method where molten steel is poured into stationary molds called ingots, allowed to solidify completely, then reheated before further processing) and improves efficiency by reducing waste and improving product quality. Continuous casting creates a non-stop flow from liquid to solid state, whereas ingot casting requires multiple separate steps with cooling and reheating.
 
+![screenshot](ccm.png)
+
+Continuous casting. 1: Ladle. 2: Stopper. 3: Tundish. 4: Submerged entry nozzle 5: Mold. 6: Roll support. 7: Turning zone. 8: Submerged entry nozzle 9: Bath level. 10: Meniscus. 11: Withdrawal unit. 12: Slab. A: Liquid metal. B: Solidified metal. C: Slag. D: Water-cooled copper plates. E: Refractory material. Source: Wikipedia https://en.wikipedia.org/wiki/Continuous_casting
+
 ### Steel Production Process
 
 Before steel reaches the continuous casting stage, it undergoes several key steps:
