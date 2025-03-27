@@ -313,5 +313,7 @@ This dashboard was designed for a 3840x2160 display.
 - Expand API capabilities
 - Implement OPC UA interface
 - Create additional Grafana dashboards for historical data analysis.
+- Add support for OpenTelemetry to simplify integration with multiple interfaces.
+- Add integration with Splunk HEC for analysis of casting events.
 - Refactor and clean up.
 
