@@ -293,6 +293,8 @@ In Grafana, navigate to Home - Administration - Users and access - Service Accou
 
 Create a new service account token and add it to GrafanaLiveToken field in the configuration.json file.
 
+:warning: In a production environment this token (and any token) should be defined somewhere safer, perhaps an enviroment variable or a vault, and definetly not in a public repository like GitHub!.
+
 ### Create an Inifinity data source.
 
 Add a new Infinity data source and set the authentication to No Auth.
