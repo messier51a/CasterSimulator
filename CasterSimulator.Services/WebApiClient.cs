@@ -46,8 +46,7 @@ namespace CasterSimulator.Simulator.Services
                 return false;
             }
         }
-
-        // ✅ Fetch current cut schedule from API
+        
         public async Task<List<Product>?> GetCutScheduleAsync()
         {
             try
