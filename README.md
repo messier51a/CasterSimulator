@@ -318,11 +318,9 @@ This dashboard was designed for a 3840x2160 display.
 ## In Progress
 The following features are being developed to enhance CasterSimulator's capabilities:
 
-Splunk HEC Integration
-An interface to send structured casting data to Splunk HEC (HTTP Event Collector) for in-depth analysis, log correlation, and real-time alerts.
+- Splunk HEC Integration: An interface to send structured casting data to Splunk HEC (HTTP Event Collector) for in-depth analysis, log correlation, and real-time alerts.
 
-AI-Ready Data Transformer
-A new module that converts time-series and process metrics into structured, content-rich text summaries suitable for use by Large Language Models (LLMs). This will support AI-assisted analysis, automated reporting, and contextual alert explanations.
+- AI-Ready Data Transformer: A new module that converts time-series and process metrics into structured, content-rich text summaries suitable for use by Large Language Models (LLMs). This will support AI-assisted analysis, automated reporting, and contextual alert explanations.
 
 ## Future Development Plans
 
