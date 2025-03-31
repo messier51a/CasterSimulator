@@ -291,9 +291,18 @@ To access Grafana UI go to http://localhost:3000
 
 In Grafana, navigate to Home - Administration - Users and access - Service Accounts.
 
-Create a new service account token and add it to GrafanaLiveToken field in the configuration.json file.
+Store your tokens securely
+bash
+Copy
+Edit
+dotnet user-secrets set "Telemetry:GrafanaLiveToken" "your-grafana-token" --project CasterSimulator.Telemetry
+These secrets are stored in a protected location on your machine and will be loaded at runtime.
 
-:warning: In a production environment this token (and any token or API key) should be defined somewhere safer, perhaps an enviroment variable or a vault, and definetly not pushed to a repository like GitHub!.
+Verify secrets
+bash
+Copy
+Edit
+dotnet user-secrets list --project CasterSimulator.Telemetry
 
 ### Create an Inifinity data source.
 
