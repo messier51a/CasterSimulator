@@ -1,4 +1,4 @@
-# Caster Simulator with Grafana Visualization
+# Caster Simulator with Grafana Visualization and Splunk HEC Integration
 
 ![screenshot](grafana-dash-caster-overview.png)
 
