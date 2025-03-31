@@ -292,17 +292,18 @@ To access Grafana UI go to http://localhost:3000
 In Grafana, navigate to Home - Administration - Users and access - Service Accounts.
 
 Store your tokens securely
-bash
-Copy
-Edit
+
+```sh
 dotnet user-secrets set "Telemetry:GrafanaLiveToken" "your-grafana-token" --project CasterSimulator.Telemetry
+```
+
 These secrets are stored in a protected location on your machine and will be loaded at runtime.
 
 Verify secrets
-bash
-Copy
-Edit
+
+```sh
 dotnet user-secrets list --project CasterSimulator.Telemetry
+```
 
 ### Create an Inifinity data source.
 
