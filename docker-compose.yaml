@@ -1,0 +1,50 @@
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics
+    container_name: victoriametrics
+    volumes:
+      - victoriametrics-storage:/victoria-metrics-data
+    ports:
+      - "8428:8428"
+      - "8429:8429"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - victoriametrics
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+  splunk:
+    image: splunk/splunk:latest
+    platform: linux/amd64
+    container_name: splunk
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_PASSWORD=changeme
+      - SPLUNK_HEC_ENABLE=true
+      - SPLUNK_HEC_TOKEN=MY-HEC-TOKEN
+      - SPLUNK_HEC_PORT=8088
+    ports:
+      - "8000:8000"
+      - "8088:8088"
+    volumes:
+      - splunk-data:/opt/splunk/var
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+
+volumes:
+  victoriametrics-storage:
+  grafana-storage:
+  splunk-data:

@@ -1,0 +1,363 @@
+[
+  {
+    "SteelGradeId": "301",
+    "SteelGradeGroup": "HC",
+    "LiquidusTemperatureC": 1530.0,
+    "Description": "Austenitic Stainless Steel (High_Carbon)",
+    "TargetSuperheatC": 25,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.15
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 2.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.045
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 18.0
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 8.0
+      },
+      {
+        "ElementName": "N",
+        "Percentage": 0.1
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "304",
+    "SteelGradeGroup": "LC",
+    "LiquidusTemperatureC": 1520.0,
+    "Description": "Austenitic Stainless Steel (Low_Carbon)",
+    "TargetSuperheatC": 35,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.07
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 2.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 0.75
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.045
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 19.5
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 10.5
+      },
+      {
+        "ElementName": "N",
+        "Percentage": 0.1
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "316",
+    "SteelGradeGroup": "LC",
+    "LiquidusTemperatureC": 1520.0,
+    "Description": "Austenitic Stainless Steel (Low_Carbon)",
+    "TargetSuperheatC": 35,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.08
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 2.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 0.75
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.045
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 18.0
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 14.0
+      },
+      {
+        "ElementName": "Mo",
+        "Percentage": 3.0
+      },
+      {
+        "ElementName": "N",
+        "Percentage": 0.1
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "321",
+    "SteelGradeGroup": "LC",
+    "LiquidusTemperatureC": 1520.0,
+    "Description": "Austenitic Stainless Steel (Low_Carbon)",
+    "TargetSuperheatC": 35,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.08
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 2.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 0.75
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.045
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 19.0
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 12.0
+      },
+      {
+        "ElementName": "Ti",
+        "Percentage": 0.7
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "410",
+    "SteelGradeGroup": "MC",
+    "LiquidusTemperatureC": 1525.0,
+    "Description": "Martensitic Stainless Steel (Medium_Carbon)",
+    "TargetSuperheatC": 30,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.15
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.04
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 13.5
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 0.75
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "420",
+    "SteelGradeGroup": "HC",
+    "LiquidusTemperatureC": 1530.0,
+    "Description": "Martensitic Stainless Steel (High_Carbon)",
+    "TargetSuperheatC": 25,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.3
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.04
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 13.0
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "430",
+    "SteelGradeGroup": "MC",
+    "LiquidusTemperatureC": 1525.0,
+    "Description": "Ferritic Stainless Steel (Medium_Carbon)",
+    "TargetSuperheatC": 30,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.12
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.04
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 17.0
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "2205",
+    "SteelGradeGroup": "ULC",
+    "LiquidusTemperatureC": 1515.0,
+    "Description": "Duplex Stainless Steel (Ultra_Low_Carbon)",
+    "TargetSuperheatC": 40,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 2.0
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 1.0
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.035
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.02
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 22.0
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 5.5
+      },
+      {
+        "ElementName": "Mo",
+        "Percentage": 3.0
+      },
+      {
+        "ElementName": "N",
+        "Percentage": 0.15
+      }
+    ]
+  },
+  {
+    "SteelGradeId": "2507",
+    "SteelGradeGroup": "ULC",
+    "LiquidusTemperatureC": 1515.0,
+    "Description": "Super Duplex Stainless Steel (Ultra_Low_Carbon)",
+    "TargetSuperheatC": 40,
+    "Chemistry": [
+      {
+        "ElementName": "C",
+        "Percentage": 0.03
+      },
+      {
+        "ElementName": "Mn",
+        "Percentage": 1.2
+      },
+      {
+        "ElementName": "Si",
+        "Percentage": 0.8
+      },
+      {
+        "ElementName": "P",
+        "Percentage": 0.035
+      },
+      {
+        "ElementName": "S",
+        "Percentage": 0.02
+      },
+      {
+        "ElementName": "Cr",
+        "Percentage": 25.0
+      },
+      {
+        "ElementName": "Ni",
+        "Percentage": 7.0
+      },
+      {
+        "ElementName": "Mo",
+        "Percentage": 4.0
+      },
+      {
+        "ElementName": "N",
+        "Percentage": 0.27
+      }
+    ]
+  }
+]
