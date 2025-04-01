@@ -332,5 +332,6 @@ The following features are being developed to enhance CasterSimulator's capabili
 - Create additional Grafana dashboards for historical data analysis.
 - Add support for OpenTelemetry to simplify integration with multiple interfaces.
 - Add integration with Splunk HEC for analysis of casting events.
+- Add functionality to push production schedules via API.
 - Refactor and clean up.
 
