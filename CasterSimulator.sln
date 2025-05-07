@@ -6,8 +6,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Components"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Models", "CasterSimulator.Models\CasterSimulator.Models.csproj", "{C0C71780-67D4-436F-BC31-57BBE5CA205F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Playground", "CasterSimulator.Playground\CasterSimulator.Playground.csproj", "{9350F695-326B-4E7B-B70F-20B6D20C1982}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Enums", "CasterSimulator.Enums\CasterSimulator.Enums.csproj", "{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CasterSimulator.Telemetry", "CasterSimulator.Telemetry\CasterSimulator.Telemetry.csproj", "{1E2674B2-D126-42BF-A336-5FE1DD6810DB}"
@@ -34,10 +32,6 @@ Global
 		{C0C71780-67D4-436F-BC31-57BBE5CA205F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0C71780-67D4-436F-BC31-57BBE5CA205F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0C71780-67D4-436F-BC31-57BBE5CA205F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9350F695-326B-4E7B-B70F-20B6D20C1982}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9350F695-326B-4E7B-B70F-20B6D20C1982}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9350F695-326B-4E7B-B70F-20B6D20C1982}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9350F695-326B-4E7B-B70F-20B6D20C1982}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E4B87F0-DD42-42D8-9854-FA3E9CDB25DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
