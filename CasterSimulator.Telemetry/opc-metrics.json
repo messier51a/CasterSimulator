@@ -1,0 +1,30 @@
+﻿{
+  "opcUa": {
+    "metrics": [
+      {
+        "metric": "cast_speed",
+        "opcItemName": "CasterSimulator.PLC.CastSpeed",
+        "type": "double",
+        "unit": "m/min"
+      },
+      {
+        "metric": "mold_level",
+        "opcItemName": "CasterSimulator.PLC.MoldLevel",
+        "type": "double",
+        "unit": "mm"
+      },
+      {
+        "metric": "ladle_weight",
+        "opcItemName": "CasterSimulator.PLC.LadleWeight",
+        "type": "double",
+        "unit": "kg"
+      },
+      {
+        "metric": "total_cast_length",
+        "opcItemName": "CasterSimulator.PLC.CastLength",
+        "type": "double",
+        "unit": "m"
+      }
+    ]
+  }
+}

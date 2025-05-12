@@ -7,5 +7,7 @@ public class TelemetryConfiguration
     public string SplunkHecUrl { get; set; }
     public string SplunkHecToken { get; set; } //TODO: remove, add to env variable or vault.
     public string OtlpEndpoint { get; set; }
+    public string OpcUaUrl { get; set; }
+    public string OpcUaMappingPath { get; set; }
     public string ServiceName { get; set; }
 }

@@ -27,6 +27,9 @@ namespace CasterSimulator.Telemetry
             _endpoints.Add(new SplunkHecEndpoint(
                 Configuration.Telemetry.SplunkHecUrl,
                 Configuration.Telemetry.SplunkHecToken));
+            
+            _endpoints.Add(new OpcUaEndpoint(Configuration.Telemetry.OpcUaUrl, Configuration.Telemetry.OpcUaMappingPath));
+
         }
 
         public void RegisterMetric(string name, Func<object> valueProvider, string area)
